@@ -79,19 +79,27 @@ export default function Sidebar() {
     createClient().auth.getUser().then(({ data }) => {
       const u = data.user;
       if (!u) return;
+
+      // Clear stale data if a different user is now logged in
+      const storedUid = localStorage.getItem("auth_user_id");
+      if (storedUid && storedUid !== u.id) {
+        ["amal_completed", "tashriq_count", "user_profile", "profile_photo_base64"].forEach(k => localStorage.removeItem(k));
+      }
+      localStorage.setItem("auth_user_id", u.id);
+
       const name = u.user_metadata?.full_name ?? u.user_metadata?.name ?? u.email?.split("@")[0] ?? "";
       setUserName(name);
       const localPhoto = localStorage.getItem("profile_photo_base64") ?? "";
       const gender = (() => { try { return (JSON.parse(localStorage.getItem("user_profile") ?? "{}") as { gender?: string }).gender ?? null; } catch { return null; } })();
       setUserAvatar(localPhoto || (gender !== "female" ? u.user_metadata?.avatar_url ?? null : null));
       if (name) setUserInitial(name.charAt(0).toUpperCase());
-    });
 
-    try {
-      const all: Record<number, string[]> = JSON.parse(localStorage.getItem("amal_completed") ?? "{}");
-      const pts = Object.entries(all).reduce((sum, [day, ids]) => sum + calculatePoints(ids, Number(day)), 0);
-      setTotalPoints(pts);
-    } catch { /* empty */ }
+      try {
+        const all: Record<number, string[]> = JSON.parse(localStorage.getItem("amal_completed") ?? "{}");
+        const pts = Object.entries(all).reduce((sum, [day, ids]) => sum + calculatePoints(ids, Number(day)), 0);
+        setTotalPoints(pts);
+      } catch { /* empty */ }
+    });
   }, []);
 
   const dayOrdinal = currentDay ? getDayOrdinal(currentDay) : null;
