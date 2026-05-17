@@ -2,9 +2,14 @@
 
 export const dynamic = "force-dynamic";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { fetchCommunityStats } from "@/lib/supabase/scores";
 import Link from "next/link";
+
+function toBn(n: number): string {
+  return n.toString().replace(/[0-9]/g, (d) => "০১২৩৪৫৬৭৮৯"[+d]);
+}
 
 export default function SignInPage() {
   const [email, setEmail] = useState("");
@@ -12,6 +17,11 @@ export default function SignInPage() {
   const [sent, setSent] = useState(false);
   const [error, setError] = useState("");
   const [showEmailForm, setShowEmailForm] = useState(false);
+  const [participantCount, setParticipantCount] = useState(0);
+
+  useEffect(() => {
+    fetchCommunityStats().then((s) => setParticipantCount(s.totalParticipants));
+  }, []);
 
   const handleMagicLink = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -101,7 +111,9 @@ export default function SignInPage() {
               />
             ))}
           </div>
-          <span className="text-[#A3E4D7] text-xs">১২,৪৩৭+ মুসলিম চ্যালেঞ্জে</span>
+          <span className="text-[#A3E4D7] text-xs">
+            {participantCount > 0 ? `${toBn(participantCount)}+ মুসলিম চ্যালেঞ্জে` : "চ্যালেঞ্জে যোগ দিন"}
+          </span>
         </div>
       </div>
 
@@ -220,14 +232,6 @@ export default function SignInPage() {
               </Link>
             </div>
 
-            {/* Terms */}
-            <p className="text-[#AEB6BF] text-[11px] text-center leading-relaxed mt-2">
-              চালিয়ে যাওয়ার মাধ্যমে আপনি আমাদের{" "}
-              <span className="underline cursor-pointer hover:text-[#0B3C26]">শর্তাবলী</span>{" "}
-              ও{" "}
-              <span className="underline cursor-pointer hover:text-[#0B3C26]">গোপনীয়তা নীতি</span>{" "}
-              স্বীকার করছেন।
-            </p>
           </div>
         )}
       </div>

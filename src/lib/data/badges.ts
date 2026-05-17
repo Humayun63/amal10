@@ -4,12 +4,13 @@ export interface Badge {
   description: string;
   icon: string;
   condition: (data: BadgeConditionData) => boolean;
+  getEarningDay?: (completedAmalIds: Record<number, string[]>) => number | null;
 }
 
 export interface BadgeConditionData {
   totalPoints: number;
   streak: number;
-  completedAmalIds: Record<number, string[]>; // day -> completed ids
+  completedAmalIds: Record<number, string[]>;
   daysCompleted: number;
 }
 
@@ -19,7 +20,48 @@ export const BADGES: Badge[] = [
     title: "প্রথম পদক্ষেপ",
     description: "প্রথম আমল সম্পন্ন করেছেন",
     icon: "🌱",
-    condition: ({ totalPoints }) => totalPoints >= 10,
+    condition: ({ completedAmalIds }) => Object.values(completedAmalIds).some(ids => ids.length > 0),
+    getEarningDay: (completedAmalIds) => {
+      const days = Object.keys(completedAmalIds).map(Number).sort((a, b) => a - b);
+      return days.find(d => completedAmalIds[d].length > 0) ?? null;
+    },
+  },
+  {
+    id: "dhikr_master",
+    title: "যিকর মাস্টার",
+    description: "কমপক্ষে ৩ দিন যিকর সম্পন্ন করেছেন",
+    icon: "📿",
+    condition: ({ completedAmalIds }) => {
+      const dhikrIds = ["tasbeeh", "tahlil", "takbeer_dhikr", "istighfar", "durood", "morning_dhikr", "evening_dhikr"];
+      const dhikrDays = Object.values(completedAmalIds).filter(ids =>
+        ids.some(id => dhikrIds.includes(id))
+      );
+      return dhikrDays.length >= 3;
+    },
+    getEarningDay: (completedAmalIds) => {
+      const dhikrIds = ["tasbeeh", "tahlil", "takbeer_dhikr", "istighfar", "durood", "morning_dhikr", "evening_dhikr"];
+      let count = 0;
+      const days = Object.keys(completedAmalIds).map(Number).sort((a, b) => a - b);
+      for (const d of days) {
+        if (completedAmalIds[d].some(id => dhikrIds.includes(id))) {
+          count++;
+          if (count >= 3) return d;
+        }
+      }
+      return null;
+    },
+  },
+  {
+    id: "tahajjud_warrior",
+    title: "তাহাজ্জুদী",
+    description: "তাহাজ্জুদ নামাজ পড়েছেন",
+    icon: "🌙",
+    condition: ({ completedAmalIds }) =>
+      Object.values(completedAmalIds).some(ids => ids.includes("tahajjud")),
+    getEarningDay: (completedAmalIds) => {
+      const days = Object.keys(completedAmalIds).map(Number).sort((a, b) => a - b);
+      return days.find(d => completedAmalIds[d].includes("tahajjud")) ?? null;
+    },
   },
   {
     id: "arafah_faster",
@@ -28,6 +70,7 @@ export const BADGES: Badge[] = [
     icon: "⭐",
     condition: ({ completedAmalIds }) =>
       completedAmalIds[9]?.includes("arafah_fast") ?? false,
+    getEarningDay: () => 9,
   },
   {
     id: "takbir_squad",
@@ -35,17 +78,23 @@ export const BADGES: Badge[] = [
     description: "আইয়ামে তাশরীকের ৫ দিন তাকবীর আদায় করেছেন",
     icon: "📣",
     condition: ({ completedAmalIds }) =>
-      [9, 10, 11, 12, 13].every(
-        (day) => completedAmalIds[day]?.includes("takbir_tashriq") ?? false
-      ),
+      [9, 10, 11, 12, 13].every(day => completedAmalIds[day]?.includes("takbir_tashriq") ?? false),
+    getEarningDay: () => 13,
   },
   {
     id: "perfect_day",
     title: "পারফেক্ট দিন",
     description: "একদিনে সকল আমল সম্পন্ন করেছেন",
     icon: "🏆",
-    condition: ({ completedAmalIds }) =>
-      Object.keys(completedAmalIds).length > 0,
+    condition: ({ daysCompleted }) => daysCompleted >= 1,
+    getEarningDay: (completedAmalIds) => {
+      const { getAmalForDay } = require("./amal");
+      const days = Object.keys(completedAmalIds).map(Number).sort((a, b) => a - b);
+      return days.find(d => {
+        const dayAmal = getAmalForDay(d);
+        return dayAmal.length > 0 && completedAmalIds[d].length >= dayAmal.length;
+      }) ?? null;
+    },
   },
   {
     id: "streak_3",
@@ -53,6 +102,10 @@ export const BADGES: Badge[] = [
     description: "টানা ৩ দিন আমল সম্পন্ন করেছেন",
     icon: "🔥",
     condition: ({ streak }) => streak >= 3,
+    getEarningDay: (completedAmalIds) => {
+      const days = Object.keys(completedAmalIds).map(Number).sort((a, b) => a - b);
+      return days.length >= 3 ? days[2] : null;
+    },
   },
   {
     id: "streak_7",
@@ -60,6 +113,10 @@ export const BADGES: Badge[] = [
     description: "টানা ৭ দিন আমল সম্পন্ন করেছেন",
     icon: "⚡",
     condition: ({ streak }) => streak >= 7,
+    getEarningDay: (completedAmalIds) => {
+      const days = Object.keys(completedAmalIds).map(Number).sort((a, b) => a - b);
+      return days.length >= 7 ? days[6] : null;
+    },
   },
   {
     id: "perfect_10",
@@ -67,6 +124,7 @@ export const BADGES: Badge[] = [
     description: "১০ দিনের চ্যালেঞ্জ সম্পন্ন করেছেন",
     icon: "💎",
     condition: ({ daysCompleted }) => daysCompleted >= 10,
+    getEarningDay: () => 10,
   },
   {
     id: "point_500",
