@@ -1,6 +1,6 @@
-export const DHUL_HIJJAH_START = new Date("2025-06-27T00:00:00+06:00");
-export const CHALLENGE_END = new Date("2025-07-09T23:59:59+06:00");
-export const TASHRIQ_END = new Date("2025-07-12T15:30:00+06:00");
+export const DHUL_HIJJAH_START = new Date("2026-05-19T00:00:00+06:00");
+export const CHALLENGE_END = new Date("2026-05-28T23:59:59+06:00");
+export const TASHRIQ_END = new Date("2026-05-31T15:30:00+06:00");
 
 export function getCurrentDhulHijjahDay(): number | null {
   const now = new Date();
