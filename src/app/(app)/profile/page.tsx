@@ -233,6 +233,67 @@ function SettingsSheet({ user, profile, onClose, onSave, onPhotoSave }: {
   );
 }
 
+// ── Password Change Sheet ─────────────────────────────────────────────────────
+function PasswordChangeSheet({ onClose }: { onClose: () => void }) {
+  const [newPassword, setNewPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [done, setDone] = useState(false);
+  const [error, setError] = useState("");
+
+  async function handleSave(e: React.FormEvent) {
+    e.preventDefault();
+    if (newPassword !== confirm) { setError("পাসওয়ার্ড দুটি মিলছে না।"); return; }
+    if (newPassword.length < 6) { setError("পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে।"); return; }
+    setSaving(true);
+    setError("");
+    const { error } = await createClient().auth.updateUser({ password: newPassword });
+    setSaving(false);
+    if (error) setError(error.message);
+    else setDone(true);
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
+      <div className="absolute inset-0 bg-black/50" onClick={onClose}/>
+      <div className="relative w-full md:max-w-md bg-white rounded-t-3xl md:rounded-2xl p-5 z-10">
+        <div className="md:hidden w-10 h-1 bg-[#E6F4EA] rounded-full mx-auto mb-5"/>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-[#0B3C26] font-bold text-lg">পাসওয়ার্ড পরিবর্তন</h2>
+          <button onClick={onClose} className="w-8 h-8 rounded-full bg-[#F5F5F5] flex items-center justify-center">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="#1C2833" strokeWidth="2" strokeLinecap="round"/></svg>
+          </button>
+        </div>
+        {done ? (
+          <div className="text-center py-4">
+            <p className="text-4xl mb-3">✅</p>
+            <p className="text-[#0B3C26] font-bold text-base mb-1">পাসওয়ার্ড আপডেট হয়েছে!</p>
+            <p className="text-[#AEB6BF] text-sm mb-5">পরবর্তী লগইনে নতুন পাসওয়ার্ড ব্যবহার করুন।</p>
+            <button onClick={onClose} className="w-full py-3 bg-[#0B3C26] text-white font-bold rounded-xl text-sm">ঠিক আছে</button>
+          </div>
+        ) : (
+          <form onSubmit={handleSave} className="flex flex-col gap-4">
+            <div>
+              <label className="text-[#AEB6BF] text-xs font-bold uppercase tracking-widest block mb-2">নতুন পাসওয়ার্ড</label>
+              <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="কমপক্ষে ৬ অক্ষর" required minLength={6}
+                className="w-full bg-[#FAFAF9] border border-[#E6F4EA] rounded-xl px-4 py-3 text-[#1C2833] text-sm outline-none focus:border-[#A3E4D7] transition-colors"/>
+            </div>
+            <div>
+              <label className="text-[#AEB6BF] text-xs font-bold uppercase tracking-widest block mb-2">পাসওয়ার্ড নিশ্চিত করুন</label>
+              <input type="password" value={confirm} onChange={e => setConfirm(e.target.value)} placeholder="একই পাসওয়ার্ড আবার দিন" required minLength={6}
+                className="w-full bg-[#FAFAF9] border border-[#E6F4EA] rounded-xl px-4 py-3 text-[#1C2833] text-sm outline-none focus:border-[#A3E4D7] transition-colors"/>
+            </div>
+            {error && <p className="text-red-500 text-xs">{error}</p>}
+            <button type="submit" disabled={saving} className="w-full py-3.5 bg-[#0B3C26] text-white font-bold rounded-xl active:scale-95 transition-all disabled:opacity-60">
+              {saving ? "আপডেট হচ্ছে..." : "পাসওয়ার্ড আপডেট করুন"}
+            </button>
+          </form>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ── Share Card Modal ──────────────────────────────────────────────────────────
 function ShareCardModal({ displayName, streak, totalPoints, onClose }: {
   displayName: string;
@@ -436,6 +497,7 @@ export default function ProfilePage() {
   const [mounted, setMounted] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showShareCard, setShowShareCard] = useState(false);
+  const [showPasswordChange, setShowPasswordChange] = useState(false);
 
   useEffect(() => {
     setAllCompleted(loadCompleted());
@@ -664,6 +726,21 @@ export default function ProfilePage() {
               <span className="text-[#1C2833] text-sm">ডেটা সিঙ্ক</span>
               <span className="text-[#AEB6BF] text-xs">{user ? "ক্লাউডে সিঙ্ক আছে ✓" : "লোকাল ডিভাইসে"}</span>
             </div>
+            {user?.email && (
+              <div className="px-5 py-3.5 flex items-center justify-between">
+                <span className="text-[#1C2833] text-sm">ইমেইল</span>
+                <span className="text-[#AEB6BF] text-xs truncate max-w-40">{user.email}</span>
+              </div>
+            )}
+            {user && (
+              <button
+                onClick={() => setShowPasswordChange(true)}
+                className="w-full px-5 py-3.5 flex items-center justify-between text-left active:bg-[#FAFAF9] transition-colors"
+              >
+                <span className="text-[#1C2833] text-sm">পাসওয়ার্ড পরিবর্তন</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="#AEB6BF" strokeWidth="2" strokeLinecap="round"/></svg>
+              </button>
+            )}
             <button
               onClick={() => setShowSettings(true)}
               className="w-full px-5 py-3.5 flex items-center justify-between text-left active:bg-[#FAFAF9] transition-colors"
@@ -705,6 +782,11 @@ export default function ProfilePage() {
           onSave={p => setProfile(p)}
           onPhotoSave={b64 => setPhotoB64(b64)}
         />
+      )}
+
+      {/* Password change sheet */}
+      {showPasswordChange && (
+        <PasswordChangeSheet onClose={() => setShowPasswordChange(false)} />
       )}
 
       {/* Share card modal */}

@@ -3,7 +3,7 @@ import Image from "next/image";
 
 export default function NotFound() {
   return (
-    <div className="min-h-screen bg-[#FAFAF9] flex flex-col items-center justify-center px-6 text-center">
+    <main className="min-h-screen bg-[#FAFAF9] flex flex-col items-center justify-center px-6 text-center">
       <Image src="/logo.png" alt="আমল লোগো" width={96} height={98} className="w-24 h-24 object-contain mb-6 drop-shadow-md"/>
 
       {/* Arabic */}
@@ -27,6 +27,6 @@ export default function NotFound() {
       >
         ← হোমে ফিরে যান
       </Link>
-    </div>
+    </main>
   );
 }

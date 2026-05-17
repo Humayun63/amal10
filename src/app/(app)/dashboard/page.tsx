@@ -8,7 +8,7 @@ import {
 } from "@/lib/data/amal";
 import {
   getCurrentDhulHijjahDay, isTashriqDay,
-  isArafahDay, isEidDay, DHUL_HIJJAH_START,
+  isArafahDay, isEidDay, DHUL_HIJJAH_START, getTimeUntilStart,
 } from "@/lib/utils/dhulHijjah";
 import BottomSheet from "@/components/ui/BottomSheet";
 import Confetti from "@/components/ui/Confetti";
@@ -99,6 +99,34 @@ function to12h(t: string): string {
 }
 
 // ── Sub-components ────────────────────────────────────────────────────────────
+function PreChallengeCountdown() {
+  const [time, setTime] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+  useEffect(() => {
+    setTime(getTimeUntilStart());
+    const id = setInterval(() => setTime(getTimeUntilStart()), 1000);
+    return () => clearInterval(id);
+  }, []);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return (
+    <div className="mx-5 mb-4 bg-white/10 border border-white/20 rounded-xl px-4 py-3">
+      <p className="text-[#A3E4D7] text-[10px] font-bold uppercase tracking-widest mb-2">চ্যালেঞ্জ শুরু হতে বাকি</p>
+      <div className="flex gap-3">
+        {[
+          { label: "দিন", value: time.days },
+          { label: "ঘণ্টা", value: time.hours },
+          { label: "মিনিট", value: time.minutes },
+          { label: "সেকেন্ড", value: time.seconds },
+        ].map(({ label, value }) => (
+          <div key={label} className="text-center">
+            <p className="text-white text-xl font-bold tabular-nums leading-none" suppressHydrationWarning>{pad(value)}</p>
+            <p className="text-white/50 text-[9px] mt-0.5">{label}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function GeometricPattern() {
   const lines = Array.from({length:12},(_,i)=>{
     const a=(i*30)*Math.PI/180;
@@ -344,8 +372,11 @@ export default function DashboardPage() {
   const [userId,setUserId]=useState<string|null>(null);
   const [showDay10Celebration,setShowDay10Celebration]=useState(false);
   const [profileIncomplete,setProfileIncomplete]=useState(false);
+  const [isBeforeChallenge,setIsBeforeChallenge]=useState(false);
 
   useEffect(()=>{
+    const beforeStart = new Date() < DHUL_HIJJAH_START;
+    setIsBeforeChallenge(beforeStart);
     setDay(getCurrentDhulHijjahDay()??1);
     setAllCompleted(loadCompleted());
 setGender(loadGender());
@@ -610,9 +641,11 @@ setGender(loadGender());
                 </div>
               </div>
 
-              {isFutureDay&&<div className="mx-5 mb-4 bg-white/10 border border-white/20 rounded-xl px-3 py-2 text-xs text-white/70 font-medium">🔒 ভবিষ্যতের দিন — দেখতে পাচ্ছেন, কিন্তু আমল আজকের দিন আসলেই সম্পন্ন করা যাবে।</div>}
-              {isArafahDay(day)&&!isFutureDay&&<div className="mx-5 mb-4 bg-amber-500/20 border border-amber-400/30 rounded-xl px-3 py-2 text-xs text-amber-200 font-semibold">⭐ আরাফার দিন — আজকের রোজা দুই বছরের গুনাহ মাফ করে!</div>}
-              {isEidDay(day)&&!isFutureDay&&<div className="mx-5 mb-4 bg-white/10 border border-white/20 rounded-xl px-3 py-2 text-xs text-white font-semibold">🎉 ঈদুল আজহা মুবারক! আজ রোজা রাখা নিষিদ্ধ।</div>}
+              {isBeforeChallenge&&<PreChallengeCountdown/>}
+              {isBeforeChallenge&&<div className="mx-5 mb-4 bg-amber-500/20 border border-amber-400/30 rounded-xl px-3 py-2 text-xs text-amber-200 font-medium">🔒 চ্যালেঞ্জ এখনো শুরু হয়নি — আমল তালিকা দেখতে পাচ্ছেন, কিন্তু শুরুর দিন থেকে সম্পন্ন করা যাবে।</div>}
+              {isFutureDay&&!isBeforeChallenge&&<div className="mx-5 mb-4 bg-white/10 border border-white/20 rounded-xl px-3 py-2 text-xs text-white/70 font-medium">🔒 ভবিষ্যতের দিন — দেখতে পাচ্ছেন, কিন্তু আমল আজকের দিন আসলেই সম্পন্ন করা যাবে।</div>}
+              {isArafahDay(day)&&!isFutureDay&&!isBeforeChallenge&&<div className="mx-5 mb-4 bg-amber-500/20 border border-amber-400/30 rounded-xl px-3 py-2 text-xs text-amber-200 font-semibold">⭐ আরাফার দিন — আজকের রোজা দুই বছরের গুনাহ মাফ করে!</div>}
+              {isEidDay(day)&&!isFutureDay&&!isBeforeChallenge&&<div className="mx-5 mb-4 bg-white/10 border border-white/20 rounded-xl px-3 py-2 text-xs text-white font-semibold">🎉 ঈদুল আজহা মুবারক! আজ রোজা রাখা নিষিদ্ধ।</div>}
             </div>
 
             {/* ── DAY 8 ARAFAH REMINDER ──────────────────────────────────── */}
@@ -750,14 +783,14 @@ setGender(loadGender());
                           checked={completed.includes(amal.id)}
                           onToggle={()=>toggle(amal.id)}
                           onDetail={()=>setSelectedAmal(amal)}
-                          disabled={isFutureDay}
+                          disabled={isFutureDay||isBeforeChallenge}
                         />
                       :<AmalRow key={amal.id} amal={amal}
                           checked={completed.includes(amal.id)}
                           onToggle={()=>toggle(amal.id)}
                           onDetail={()=>setSelectedAmal(amal)}
                           gender={gender}
-                          disabled={isFutureDay}
+                          disabled={isFutureDay||isBeforeChallenge}
                         />
                   ))}
                 </div>

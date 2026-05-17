@@ -9,6 +9,7 @@ const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
   display: "swap",
+  preload: true,
 });
 
 const hindSiliguri = Hind_Siliguri({
@@ -16,6 +17,7 @@ const hindSiliguri = Hind_Siliguri({
   subsets: ["bengali", "latin"],
   weight: ["400", "500", "600", "700"],
   display: "swap",
+  preload: true,
 });
 
 export const metadata: Metadata = {
@@ -40,7 +42,7 @@ export const viewport: Viewport = {
   themeColor: "#0B3C26",
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
+  maximumScale: 5,
 };
 
 export default function RootLayout({
@@ -54,6 +56,10 @@ export default function RootLayout({
       className={`${inter.variable} ${hindSiliguri.variable} h-full`}
     >
       <body className="min-h-full bg-[#FAFAF9] text-[#1C2833] antialiased">
+        {/* Resource hints — React 18 hoists these to <head> */}
+        <link rel="preconnect" href="https://api.aladhan.com"/>
+        <link rel="dns-prefetch" href="https://www.youtube.com"/>
+        <link rel="dns-prefetch" href="https://i.ytimg.com"/>
         <AppInit />
         <PWAInstallBanner />
         {children}

@@ -11,9 +11,10 @@ function toBn(n: number): string {
 }
 
 function CountdownTimer() {
-  const [time, setTime] = useState(getTimeUntilStart());
+  const [time, setTime] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
 
   useEffect(() => {
+    setTime(getTimeUntilStart());
     const id = setInterval(() => setTime(getTimeUntilStart()), 1000);
     return () => clearInterval(id);
   }, []);
@@ -30,7 +31,7 @@ function CountdownTimer() {
       ].map(({ label, value }) => (
         <div key={label} className="flex flex-col items-center">
           <div className="w-14 h-14 sm:w-16 sm:h-16 bg-white/15 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/20">
-            <span className="text-white text-xl sm:text-2xl font-bold tabular-nums">
+            <span className="text-white text-xl sm:text-2xl font-bold tabular-nums" suppressHydrationWarning>
               {pad(value)}
             </span>
           </div>
@@ -67,7 +68,7 @@ function PhoneMockup() {
         {/* App header */}
         <div className="px-5 pb-3">
           <p className="text-white/50 text-[10px] font-medium tracking-widest uppercase">আমল · DHUL HIJJAH</p>
-          <h3 className="text-white text-lg font-bold mt-0.5">আজকের আমল</h3>
+          <p className="text-white text-lg font-bold mt-0.5">আজকের আমল</p>
         </div>
 
         {/* Dashboard card */}
@@ -170,11 +171,13 @@ const FEATURES = [
 ];
 
 export default function LandingPage() {
-  const live = isChallengeLive();
-  const [daysLeft, setDaysLeft] = useState(getTimeUntilStart().days);
+  const [live, setLive] = useState(false);
+  const [daysLeft, setDaysLeft] = useState(0);
   const [stats, setStats] = useState<CommunityStats | null>(null);
 
   useEffect(() => {
+    setLive(isChallengeLive());
+    setDaysLeft(getTimeUntilStart().days);
     const id = setInterval(() => setDaysLeft(getTimeUntilStart().days), 60000);
     fetchCommunityStats().then(setStats);
     return () => clearInterval(id);
@@ -216,6 +219,7 @@ export default function LandingPage() {
         </Link>
       </nav>
 
+      <main>
       {/* ── Hero ── */}
       <section className="bg-[#0B3C26] relative overflow-hidden">
         {/* Decorative rings */}
@@ -335,7 +339,7 @@ export default function LandingPage() {
       <section id="features" className="px-5 sm:px-8 xl:px-16 py-12 sm:py-16 max-w-7xl mx-auto w-full">
         <div className="text-center mb-10">
           <h2 className="text-[#0B3C26] text-2xl sm:text-3xl font-bold mb-2">কেন এই চ্যালেঞ্জ?</h2>
-          <p className="text-[#AEB6BF] text-sm sm:text-base">ইসলামের সবচেয়ে মর্যাদাপূর্ণ দিনগুলো সর্বোচ্চভাবে কাজে লাগান</p>
+          <p className="text-[#4B5563] text-sm sm:text-base">ইসলামের সবচেয়ে মর্যাদাপূর্ণ দিনগুলো সর্বোচ্চভাবে কাজে লাগান</p>
         </div>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {FEATURES.map((f) => (
@@ -345,7 +349,7 @@ export default function LandingPage() {
             >
               <div className="text-3xl mb-3">{f.icon}</div>
               <p className="text-[#0B3C26] font-bold text-sm sm:text-base mb-1">{f.title}</p>
-              <p className="text-[#AEB6BF] text-xs sm:text-sm">{f.desc}</p>
+              <p className="text-[#4B5563] text-xs sm:text-sm">{f.desc}</p>
             </div>
           ))}
         </div>
@@ -356,7 +360,7 @@ export default function LandingPage() {
         <div className="text-center mb-10">
           <p className="text-[#0B3C26]/50 text-xs font-semibold uppercase tracking-widest mb-2">ফজিলত হাব</p>
           <h2 className="text-[#0B3C26] text-2xl sm:text-3xl font-bold mb-2">জিলহজের ফজিলত জানুন</h2>
-          <p className="text-[#AEB6BF] text-sm sm:text-base">বিশুদ্ধ হাদিস ও ইসলামিক স্কলারদের আলোচনা থেকে অনুপ্রাণিত হন</p>
+          <p className="text-[#4B5563] text-sm sm:text-base">বিশুদ্ধ হাদিস ও ইসলামিক স্কলারদের আলোচনা থেকে অনুপ্রাণিত হন</p>
         </div>
 
         {/* Videos */}
@@ -386,7 +390,7 @@ export default function LandingPage() {
               </div>
               <div className="px-4 py-3">
                 <p className="text-[#0B3C26] font-semibold text-sm leading-snug">{video.title}</p>
-                <p className="text-[#AEB6BF] text-xs mt-0.5">{video.channel}</p>
+                <p className="text-[#4B5563] text-xs mt-0.5">{video.channel}</p>
               </div>
             </div>
           ))}
@@ -423,7 +427,7 @@ export default function LandingPage() {
               <div className="min-w-0">
                 <p className="text-[10px] font-semibold text-[#0B3C26]/40 uppercase tracking-wider mb-0.5">{article.source}</p>
                 <p className="text-[#0B3C26] font-bold text-sm leading-snug mb-1">{article.title}</p>
-                <p className="text-[#AEB6BF] text-xs leading-relaxed line-clamp-2">{article.desc}</p>
+                <p className="text-[#4B5563] text-xs leading-relaxed line-clamp-2">{article.desc}</p>
               </div>
               <div className="shrink-0 self-center text-[#AEB6BF] group-hover:text-[#0B3C26] transition-colors">
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -441,7 +445,7 @@ export default function LandingPage() {
           <div className="text-center mb-10">
             <p className="text-[#0B3C26]/50 text-xs font-semibold uppercase tracking-widest mb-2">সম্প্রদায়</p>
             <h2 className="text-[#0B3C26] text-2xl sm:text-3xl font-bold mb-2">একা নন, সবাই মিলে করুন</h2>
-            <p className="text-[#AEB6BF] text-sm sm:text-base">বিশ্বের মুসলিমদের সাথে একই লক্ষ্যে এগিয়ে যান</p>
+            <p className="text-[#4B5563] text-sm sm:text-base">বিশ্বের মুসলিমদের সাথে একই লক্ষ্যে এগিয়ে যান</p>
           </div>
 
           {stats && stats.totalParticipants === 0 ? (
@@ -468,7 +472,7 @@ export default function LandingPage() {
                   {stats ? `${toBn(stats.totalParticipants)}+` : "—"}
                 </p>
                 <p className="text-[#0B3C26] font-semibold text-sm mb-2">সক্রিয় অংশগ্রহণকারী</p>
-                <p className="text-[#AEB6BF] text-xs leading-relaxed">
+                <p className="text-[#4B5563] text-xs leading-relaxed">
                   বিশ্বের বিভিন্ন প্রান্ত থেকে মুসলিমরা এই চ্যালেঞ্জে যোগ দিয়েছেন
                 </p>
               </div>
@@ -484,7 +488,7 @@ export default function LandingPage() {
                     : "—"}
                 </p>
                 <p className="text-[#0B3C26] font-semibold text-sm mb-2">ধারাবাহিক অংশগ্রহণকারী</p>
-                <p className="text-[#AEB6BF] text-xs leading-relaxed">
+                <p className="text-[#4B5563] text-xs leading-relaxed">
                   ৩+ দিন ধরে নিয়মিত আমল চালিয়ে যাচ্ছেন
                 </p>
               </div>
@@ -496,7 +500,7 @@ export default function LandingPage() {
                   {stats ? `${toBn(stats.avgPoints)}` : "—"}
                 </p>
                 <p className="text-[#0B3C26] font-semibold text-sm mb-2">গড় পয়েন্ট</p>
-                <p className="text-[#AEB6BF] text-xs leading-relaxed">
+                <p className="text-[#4B5563] text-xs leading-relaxed">
                   সকল অংশগ্রহণকারীর গড় মোট পয়েন্ট
                 </p>
               </div>
@@ -510,7 +514,7 @@ export default function LandingPage() {
         <div className="text-center mb-10">
           <p className="text-[#0B3C26]/50 text-xs font-semibold uppercase tracking-widest mb-2">সাপোর্ট</p>
           <h2 className="text-[#0B3C26] text-2xl sm:text-3xl font-bold mb-2">কোনো প্রশ্ন আছে?</h2>
-          <p className="text-[#AEB6BF] text-sm sm:text-base">আমরা সাহায্য করতে সর্বদা প্রস্তুত</p>
+          <p className="text-[#4B5563] text-sm sm:text-base">আমরা সাহায্য করতে সর্বদা প্রস্তুত</p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl mx-auto">
           {[
@@ -521,14 +525,14 @@ export default function LandingPage() {
             <div key={faq.q} className="bg-white rounded-2xl p-5 border border-[#E6F4EA]">
               <div className="text-2xl mb-3">{faq.icon}</div>
               <p className="text-[#0B3C26] font-bold text-sm mb-2 leading-snug">{faq.q}</p>
-              <p className="text-[#AEB6BF] text-xs leading-relaxed">{faq.a}</p>
+              <p className="text-[#4B5563] text-xs leading-relaxed">{faq.a}</p>
             </div>
           ))}
         </div>
 
         {/* Contact buttons */}
         <div className="text-center mt-8">
-          <p className="text-[#AEB6BF] text-sm mb-4">আরো প্রশ্ন থাকলে সরাসরি যোগাযোগ করুন</p>
+          <p className="text-[#4B5563] text-sm mb-4">আরো প্রশ্ন থাকলে সরাসরি যোগাযোগ করুন</p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <a
               href="https://github.com/Humayun63/amal10/issues"
@@ -581,6 +585,7 @@ export default function LandingPage() {
         </div>
       </section>
 
+      </main>
       {/* ── Footer ── */}
       <footer className="bg-[#06251A] px-5 py-6 text-center border-t border-white/10">
         <div className="max-w-7xl mx-auto">
