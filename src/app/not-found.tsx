@@ -1,20 +1,10 @@
 import Link from "next/link";
+import Image from "next/image";
 
 export default function NotFound() {
   return (
     <div className="min-h-screen bg-[#FAFAF9] flex flex-col items-center justify-center px-6 text-center">
-      {/* Moon icon */}
-      <div className="w-20 h-20 rounded-full bg-[#0B3C26] flex items-center justify-center mb-6">
-        <svg width="40" height="40" viewBox="0 0 32 32" fill="none">
-          <path
-            d="M26 16a10 10 0 01-13.5 9.33A10 10 0 1016 6a10 10 0 0110 10z"
-            fill="none"
-            stroke="#A3E4D7"
-            strokeWidth="1.5"
-          />
-          <circle cx="21" cy="10" r="1.5" fill="#A3E4D7" opacity="0.6" />
-        </svg>
-      </div>
+      <Image src="/logo.png" alt="আমল লোগো" width={96} height={98} className="w-24 h-24 object-contain mb-6 drop-shadow-md"/>
 
       {/* Arabic */}
       <p className="text-[#0B3C26] text-2xl font-serif mb-2" dir="rtl">
