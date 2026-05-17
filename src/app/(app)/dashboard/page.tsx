@@ -18,6 +18,7 @@ import { syncUserScore } from "@/lib/supabase/scores";
 const STORAGE_KEY = "amal_completed";
 const TASHRIQ_KEY = "tashriq_count";
 const PROFILE_KEY = "user_profile";
+const PHOTO_KEY = "profile_photo_base64";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 function toBn(n: number): string {
@@ -84,6 +85,7 @@ function saveTashriq(d: Record<number,number>) { localStorage.setItem(TASHRIQ_KE
 function loadGender(): "male"|"female"|null {
   try { return (JSON.parse(localStorage.getItem(PROFILE_KEY)??"{}") as {gender?:string}).gender as "male"|"female" ?? null; } catch { return null; }
 }
+function loadPhoto(): string { return localStorage.getItem(PHOTO_KEY) ?? ""; }
 function computeTotalPoints(all: Record<number,string[]>): number {
   return Object.entries(all).reduce((sum,[day,ids])=>sum+calculatePoints(ids,Number(day)),0);
 }
@@ -339,10 +341,11 @@ setGender(loadGender());
       const name=u.user_metadata?.full_name??u.user_metadata?.name??u.email?.split("@")[0]??"";
       setUserId(u.id);
       setUserName(name);
-      setUserAvatar(u.user_metadata?.avatar_url??null);
+      const localPhoto=loadPhoto();
+      const savedGender=loadGender();
+      setUserAvatar(localPhoto||(savedGender!=="female"?u.user_metadata?.avatar_url??null:null));
       if(name) setUserInitial(name.charAt(0).toUpperCase());
       // Profile is incomplete if no explicit name or no gender set
-      const savedGender=loadGender();
       const explicitName=(u.user_metadata?.full_name??u.user_metadata?.name??"").trim();
       setProfileIncomplete(!explicitName||!savedGender);
     });

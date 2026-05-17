@@ -81,7 +81,9 @@ export default function Sidebar() {
       if (!u) return;
       const name = u.user_metadata?.full_name ?? u.user_metadata?.name ?? u.email?.split("@")[0] ?? "";
       setUserName(name);
-      setUserAvatar(u.user_metadata?.avatar_url ?? null);
+      const localPhoto = localStorage.getItem("profile_photo_base64") ?? "";
+      const gender = (() => { try { return (JSON.parse(localStorage.getItem("user_profile") ?? "{}") as { gender?: string }).gender ?? null; } catch { return null; } })();
+      setUserAvatar(localPhoto || (gender !== "female" ? u.user_metadata?.avatar_url ?? null : null));
       if (name) setUserInitial(name.charAt(0).toUpperCase());
     });
 
