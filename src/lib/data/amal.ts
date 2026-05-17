@@ -15,6 +15,8 @@ export interface Amal {
   countTarget?: number;
   // Female-specific title (when prayer is done alone, not in jamah)
   femaleTitle?: string;
+  // Optional amaal — excluded from completion % but still completable for bonus points
+  optional?: boolean;
 }
 
 export const ALL_AMAL: Amal[] = [
@@ -161,39 +163,39 @@ export const ALL_AMAL: Amal[] = [
   {
     id: "tasbeeh",
     title: "তাসবীহ — সুবহানাল্লাহ",
-    subtitle: "৩৩ বার",
+    subtitle: "১০০ বার",
     category: "sunnah",
     points: 10,
     days: [1,2,3,4,5,6,7,8,9,10,11,12,13],
     icon: "📿",
     countable: true,
-    countTarget: 33,
+    countTarget: 100,
     hadith: "প্রতি নামাজের পর ৩৩ বার সুবহানাল্লাহ, ৩৩ বার আলহামদুলিল্লাহ, ৩৩ বার আল্লাহু আকবার পড়া সুন্নত। (মুসলিম: ৫৯৭)",
     detail: "সুবহানাল্লাহ অর্থ: আল্লাহ পবিত্র। প্রতি নামাজের পর ও যেকোনো সময় পড়া যায়।",
   },
   {
     id: "tahlil",
     title: "তাহলিল — লা ইলাহা ইল্লাল্লাহ",
-    subtitle: "৩৩ বার",
+    subtitle: "১০০ বার",
     category: "sunnah",
     points: 10,
     days: [1,2,3,4,5,6,7,8,9,10,11,12,13],
     icon: "☝️",
     countable: true,
-    countTarget: 33,
+    countTarget: 100,
     hadith: "লা ইলাহা ইল্লাল্লাহু ওয়াহদাহু লা শারিকা লাহু... একশতবার বললে ১০টি গোলাম আজাদ করার সমান সওয়াব। (বুখারি: ৩২৯৩)",
     detail: "কালিমায়ে তাওহীদ — এটি সর্বশ্রেষ্ঠ যিকর। দিনে যত বেশি পারেন পড়ুন।",
   },
   {
     id: "takbeer_dhikr",
     title: "তাকবির — আল্লাহু আকবার",
-    subtitle: "৩৩ বার",
+    subtitle: "১০০ বার",
     category: "sunnah",
     points: 10,
     days: [1,2,3,4,5,6,7,8,9,10,11,12,13],
     icon: "🌿",
     countable: true,
-    countTarget: 33,
+    countTarget: 100,
     hadith: "দুটি বাক্য আল্লাহর কাছে প্রিয়, জিহ্বায় সহজ, মিজানে ভারী: সুবহানাল্লাহি ওয়া বিহামদিহি, সুবহানাল্লাহিল আজিম। (বুখারি: ৬৬৮২)",
     detail: "আল্লাহু আকবার অর্থ: আল্লাহ সর্বমহান। নামাজের পর ও যেকোনো সময় পড়ুন।",
   },
@@ -254,6 +256,7 @@ export const ALL_AMAL: Amal[] = [
     subtitle: "আল্লাহর সন্তুষ্টির জন্য",
     category: "sunnah",
     points: 30,
+    optional: true,
     days: [10, 11, 12, 13],
     icon: "🐑",
     hadith: "হজরত যায়িদ বিন আরকাম রাদিয়াল্লাহু আনহু বলেন: সাহাবীরা জিজ্ঞেস করলেন এই কুরবানি কী? রাসূল ﷺ বললেন: তোমাদের পিতা ইবরাহিমের সুন্নত। (ইবনে মাজাহ: ৩১২৭)",

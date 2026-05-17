@@ -28,6 +28,22 @@ const BN_DAY_LABELS: Record<number, string> = {
   11:"১১ জিলহজ",12:"১২ জিলহজ",13:"১৩ জিলহজ",
 };
 
+async function uploadPhotoToSupabase(file: File, userId: string): Promise<string | null> {
+  try {
+    const supabase = createClient();
+    const ext = file.type.includes("png") ? "png" : "jpg";
+    const path = `${userId}.${ext}`;
+    const { error } = await supabase.storage
+      .from("avatars")
+      .upload(path, file, { upsert: true, contentType: file.type });
+    if (error) return null;
+    const { data } = supabase.storage.from("avatars").getPublicUrl(path);
+    return data.publicUrl;
+  } catch {
+    return null;
+  }
+}
+
 function loadCompleted(): Record<number, string[]> {
   try { return JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "{}"); } catch { return {}; }
 }
@@ -75,11 +91,21 @@ function SettingsSheet({ user, profile, onClose, onSave, onPhotoSave }: {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = () => {
+    reader.onload = async () => {
       const b64 = reader.result as string;
       setLocalPhoto(b64);
       savePhoto(b64);
       onPhotoSave(b64);
+      // Upload to Supabase storage in background; on success persist URL in metadata
+      if (user?.id) {
+        const url = await uploadPhotoToSupabase(file, user.id);
+        if (url) {
+          try {
+            await createClient().auth.updateUser({ data: { profile_photo: url } });
+            onPhotoSave(url);
+          } catch { /* non-critical */ }
+        }
+      }
     };
     reader.readAsDataURL(file);
   }
@@ -217,7 +243,7 @@ function ShareCardModal({ displayName, streak, totalPoints, onClose }: {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const W = 800, H = 420;
+    const W = 800, H = 800;
     canvas.width = W;
     canvas.height = H;
 
@@ -228,54 +254,73 @@ function ShareCardModal({ displayName, streak, totalPoints, onClose }: {
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, W, H);
 
-    // Decorative circles (top-right)
-    ctx.strokeStyle = "rgba(255,255,255,0.07)";
+    // Decorative circles (top-right corner)
+    ctx.strokeStyle = "rgba(255,255,255,0.06)";
     ctx.lineWidth = 1;
-    [220, 180, 140, 100, 60].forEach(r => {
+    [320, 270, 220, 170, 120, 70].forEach(r => {
       ctx.beginPath();
-      ctx.arc(W - 80, 0, r, 0, Math.PI * 2);
+      ctx.arc(W, 0, r, 0, Math.PI * 2);
       ctx.stroke();
     });
 
+    // Decorative circles (bottom-left corner)
+    [200, 160, 120].forEach(r => {
+      ctx.beginPath();
+      ctx.arc(0, H, r, 0, Math.PI * 2);
+      ctx.stroke();
+    });
+
+    // Top label
+    ctx.fillStyle = "rgba(163,228,215,0.7)";
+    ctx.font = "bold 22px Arial, sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "alphabetic";
+    ctx.fillText("জিলহজ আমল চ্যালেঞ্জ ১৪৪৭", W / 2, 70);
+
+    // Thin top divider
+    ctx.fillStyle = "rgba(255,255,255,0.08)";
+    ctx.fillRect(80, 88, W - 160, 1);
+
     // Avatar circle
-    ctx.fillStyle = "rgba(163,228,215,0.2)";
+    const cx = W / 2, cy = 230;
+    ctx.fillStyle = "rgba(163,228,215,0.15)";
     ctx.beginPath();
-    ctx.arc(110, 130, 55, 0, Math.PI * 2);
+    ctx.arc(cx, cy, 90, 0, Math.PI * 2);
     ctx.fill();
     ctx.strokeStyle = "#A3E4D7";
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 3;
     ctx.beginPath();
-    ctx.arc(110, 130, 55, 0, Math.PI * 2);
+    ctx.arc(cx, cy, 90, 0, Math.PI * 2);
     ctx.stroke();
 
-    // Avatar letter
+    // Avatar initial
     ctx.fillStyle = "#A3E4D7";
-    ctx.font = "bold 44px Arial, sans-serif";
+    ctx.font = "bold 80px Arial, sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText(displayName.charAt(0).toUpperCase() || "আ", 110, 132);
+    ctx.fillText(displayName.charAt(0).toUpperCase() || "আ", cx, cy + 4);
 
     // Name
     ctx.fillStyle = "#FFFFFF";
-    ctx.font = "bold 30px Arial, sans-serif";
-    ctx.textAlign = "left";
+    ctx.font = "bold 44px Arial, sans-serif";
+    ctx.textAlign = "center";
     ctx.textBaseline = "alphabetic";
-    ctx.fillText(displayName || "মুসলিম", 190, 115);
+    ctx.fillText(displayName || "মুসলিম", W / 2, 380);
 
     // Subtitle
-    ctx.fillStyle = "#A3E4D7";
-    ctx.font = "17px Arial, sans-serif";
-    ctx.fillText("জিলহজ আমল চ্যালেঞ্জ ১৪৪৭", 190, 145);
+    ctx.fillStyle = "rgba(163,228,215,0.8)";
+    ctx.font = "22px Arial, sans-serif";
+    ctx.fillText("জিলহজ আমল চ্যালেঞ্জে অংশগ্রহণকারী", W / 2, 418);
 
     // Divider
     ctx.fillStyle = "rgba(255,255,255,0.12)";
-    ctx.fillRect(60, 185, W - 120, 1);
+    ctx.fillRect(80, 448, W - 160, 1);
 
-    // Stat boxes
+    // Stat boxes — 3 equal columns
     function drawStat(x: number, label: string, value: string, color: string) {
+      const bx = x, by = 468, bw = 196, bh = 150, br = 16;
       ctx.fillStyle = "rgba(255,255,255,0.07)";
       ctx.beginPath();
-      const bx = x, by = 205, bw = 210, bh = 110, br = 14;
       ctx.moveTo(bx + br, by);
       ctx.lineTo(bx + bw - br, by);
       ctx.quadraticCurveTo(bx + bw, by, bx + bw, by + br);
@@ -289,31 +334,40 @@ function ShareCardModal({ displayName, streak, totalPoints, onClose }: {
       ctx.fill();
 
       ctx.fillStyle = color;
-      ctx.font = "bold 38px Arial, sans-serif";
+      ctx.font = "bold 46px Arial, sans-serif";
       ctx.textAlign = "center";
       ctx.textBaseline = "alphabetic";
-      ctx.fillText(value, bx + bw / 2, by + 68);
+      ctx.fillText(value, bx + bw / 2, by + 92);
 
-      ctx.fillStyle = "rgba(255,255,255,0.55)";
-      ctx.font = "15px Arial, sans-serif";
-      ctx.fillText(label, bx + bw / 2, by + 95);
+      ctx.fillStyle = "rgba(255,255,255,0.5)";
+      ctx.font = "18px Arial, sans-serif";
+      ctx.fillText(label, bx + bw / 2, by + 128);
     }
 
-    drawStat(60, "স্ট্রেইক", `${streak} দিন 🔥`, "#F4A261");
-    drawStat(290, "পয়েন্ট", `${totalPoints}`, "#A3E4D7");
-    drawStat(520, "চ্যালেঞ্জ", "জিলহজ", "#E9D8A6");
+    // 3 boxes, total width = 3×196 + 2×20 = 628, start at (800−628)/2 = 86
+    drawStat(86,  "স্ট্রেইক", `${streak} দিন`, "#F4A261");
+    drawStat(302, "পয়েন্ট",  `${totalPoints}`,  "#A3E4D7");
+    drawStat(518, "চ্যালেঞ্জ", "জিলহজ",         "#E9D8A6");
 
-    // CTA text
-    ctx.fillStyle = "rgba(255,255,255,0.35)";
-    ctx.font = "14px Arial, sans-serif";
+    // Website URL section
+    ctx.fillStyle = "rgba(255,255,255,0.10)";
+    ctx.fillRect(80, 650, W - 160, 1);
+
+    ctx.fillStyle = "rgba(163,228,215,0.6)";
+    ctx.font = "bold 18px Arial, sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText("আপনিও যোগ দিন → " + APP_URL, W / 2, H - 22);
+    ctx.textBaseline = "alphabetic";
+    ctx.fillText("আপনিও যোগ দিন", W / 2, 692);
 
-    // Crescent (simple)
-    ctx.strokeStyle = "rgba(163,228,215,0.4)";
-    ctx.lineWidth = 2;
+    ctx.fillStyle = "rgba(255,255,255,0.75)";
+    ctx.font = "20px Arial, sans-serif";
+    ctx.fillText(APP_URL, W / 2, 724);
+
+    // Crescent decoration (bottom-right)
+    ctx.strokeStyle = "rgba(163,228,215,0.35)";
+    ctx.lineWidth = 3;
     ctx.beginPath();
-    ctx.arc(740, 380, 22, 0.4, Math.PI * 1.7);
+    ctx.arc(W - 50, H - 50, 32, 0.4, Math.PI * 1.7);
     ctx.stroke();
 
   }, [displayName, streak, totalPoints]);
@@ -335,8 +389,8 @@ function ShareCardModal({ displayName, streak, totalPoints, onClose }: {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/60" onClick={onClose}/>
-      <div className="relative w-full max-w-lg bg-white rounded-3xl overflow-hidden z-10">
-        <canvas ref={canvasRef} className="w-full" style={{ display: "block", aspectRatio: "800/420" }}/>
+      <div className="relative w-full max-w-sm bg-white rounded-3xl overflow-hidden z-10">
+        <canvas ref={canvasRef} className="w-full" style={{ display: "block", aspectRatio: "1" }}/>
 
         <div className="p-5">
           <p className="text-[#0B3C26] font-bold text-base mb-4 text-center">আপনার চ্যালেঞ্জ শেয়ার করুন</p>
@@ -375,6 +429,10 @@ export default function ProfilePage() {
     createClient().auth.getUser().then(({ data }) => {
       const u = data.user;
       setUser(u);
+      // Prefer Supabase-stored photo URL over localStorage base64
+      if (u?.user_metadata?.profile_photo) {
+        setPhotoB64(u.user_metadata.profile_photo);
+      }
 
       // Auto-detect gender from OAuth metadata if not yet set
       if (savedProfile.gender === null && u?.user_metadata?.gender) {

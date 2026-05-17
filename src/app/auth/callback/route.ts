@@ -8,7 +8,7 @@ export async function GET(request: Request) {
   const token_hash = searchParams.get("token_hash");
   const type = searchParams.get("type") as EmailOtpType | null;
   const next = searchParams.get("next") ?? "/dashboard";
-  const destination = next === "/dashboard" ? "/push-permission" : next;
+  const destination = next === "/dashboard" ? "/onboard" : next;
 
   const supabase = await createClient();
 

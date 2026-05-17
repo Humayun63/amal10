@@ -17,7 +17,6 @@ import { syncUserScore } from "@/lib/supabase/scores";
 
 const STORAGE_KEY = "amal_completed";
 const TASHRIQ_KEY = "tashriq_count";
-const DHIKR_KEY = "dhikr_counts";
 const PROFILE_KEY = "user_profile";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -82,15 +81,19 @@ function loadTashriq(): Record<number,number> {
   try { return JSON.parse(localStorage.getItem(TASHRIQ_KEY)??"{}"); } catch { return {}; }
 }
 function saveTashriq(d: Record<number,number>) { localStorage.setItem(TASHRIQ_KEY,JSON.stringify(d)); }
-function loadDhikrCounts(): Record<number,Record<string,number>> {
-  try { return JSON.parse(localStorage.getItem(DHIKR_KEY)??"{}"); } catch { return {}; }
-}
-function saveDhikrCounts(d: Record<number,Record<string,number>>) { localStorage.setItem(DHIKR_KEY,JSON.stringify(d)); }
 function loadGender(): "male"|"female"|null {
   try { return (JSON.parse(localStorage.getItem(PROFILE_KEY)??"{}") as {gender?:string}).gender as "male"|"female" ?? null; } catch { return null; }
 }
 function computeTotalPoints(all: Record<number,string[]>): number {
   return Object.entries(all).reduce((sum,[day,ids])=>sum+calculatePoints(ids,Number(day)),0);
+}
+
+// Convert "HH:MM" 24h string to "H:MM AM/PM"
+function to12h(t: string): string {
+  const [h, m] = t.split(":").map(Number);
+  const period = h >= 12 ? "PM" : "AM";
+  const hour = h % 12 || 12;
+  return `${hour}:${m.toString().padStart(2, "0")} ${period}`;
 }
 
 // ── Sub-components ────────────────────────────────────────────────────────────
@@ -188,12 +191,12 @@ function SuhurIftarWidget() {
       <div className="flex gap-3">
         <div className="flex-1 bg-[#FAFAF9] rounded-xl p-3 text-center border border-[#E6F4EA]">
           <p className="text-xl mb-1">🌙</p>
-          <p className="text-[#1C2833] font-bold text-sm tabular-nums">{times.suhur}</p>
+          <p className="text-[#1C2833] font-bold text-sm tabular-nums">{to12h(times.suhur)}</p>
           <p className="text-[#AEB6BF] text-[10px] mt-0.5">সেহরির শেষ</p>
         </div>
         <div className="flex-1 bg-[#FAFAF9] rounded-xl p-3 text-center border border-[#E6F4EA]">
           <p className="text-xl mb-1">🌇</p>
-          <p className="text-[#1C2833] font-bold text-sm tabular-nums">{times.iftar}</p>
+          <p className="text-[#1C2833] font-bold text-sm tabular-nums">{to12h(times.iftar)}</p>
           <p className="text-[#AEB6BF] text-[10px] mt-0.5">ইফতারের সময়</p>
         </div>
       </div>
@@ -208,6 +211,7 @@ function AmalRow({amal, checked, onToggle, onDetail, gender}: {
   const badge={fard:"ফরজ",sunnah:"নফল",social:"সদকা"};
   const color={fard:"bg-emerald-100 text-[#0B3C26]",sunnah:"bg-purple-100 text-purple-700",social:"bg-teal-100 text-teal-700"};
   const title = gender==="female" && amal.femaleTitle ? amal.femaleTitle : amal.title;
+  const isOptional = amal.optional === true;
   return (
     <div className={`flex items-center gap-3 p-3.5 rounded-2xl border transition-all duration-200 ${checked?"bg-[#E6F4EA] border-[#A3E4D7]":"bg-white border-[#F0F4F2] active:border-[#A3E4D7]"}`}>
       <button onClick={onToggle} className="shrink-0 w-8 h-8 flex items-center justify-center">
@@ -219,6 +223,7 @@ function AmalRow({amal, checked, onToggle, onDetail, gender}: {
         <div className="flex items-center gap-1.5 mb-0.5">
           <span className="text-sm leading-none">{amal.icon}</span>
           <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${color[amal.category]}`}>{badge[amal.category]}</span>
+          {isOptional&&<span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">ঐচ্ছিক</span>}
         </div>
         <p className={`text-sm font-semibold leading-tight ${checked?"text-[#0B3C26]/50 line-through":"text-[#1C2833]"}`}>{title}</p>
         {amal.subtitle&&<p className="text-[11px] text-[#AEB6BF] mt-0.5 leading-tight">{amal.subtitle}</p>}
@@ -233,46 +238,31 @@ function AmalRow({amal, checked, onToggle, onDetail, gender}: {
   );
 }
 
-// Countable dhikr row
-function DhikrRow({amal, count, onIncrement, onDetail}: {
-  amal:Amal; count:number; onIncrement:()=>void; onDetail:()=>void;
+// Countable dhikr row — done/undone toggle
+function DhikrRow({amal, checked, onToggle, onDetail}: {
+  amal:Amal; checked:boolean; onToggle:()=>void; onDetail:()=>void;
 }) {
-  const target=amal.countTarget??33;
-  const done=count>=target;
-  const pct=Math.min((count/target)*100,100);
   return (
-    <div className={`flex items-center gap-3 p-3.5 rounded-2xl border transition-all duration-200 ${done?"bg-[#E6F4EA] border-[#A3E4D7]":"bg-white border-[#F0F4F2]"}`}>
-      {/* Tap-to-count circle */}
-      <button
-        onClick={done ? undefined : onIncrement}
-        className={`shrink-0 w-11 h-11 rounded-full flex flex-col items-center justify-center transition-all active:scale-90 ${
-          done ? "bg-[#0B3C26] cursor-default" : "bg-[#F0F4F2] active:bg-[#E6F4EA]"
-        }`}
-      >
-        {done
-          ? <svg width="12" height="10" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
-          : <>
-              <span className="text-[#0B3C26] text-[10px] font-bold leading-none">+১</span>
-              <span className="text-[#AEB6BF] text-[8px] leading-none mt-0.5">{toBn(count)}/{toBn(target)}</span>
-            </>
-        }
+    <div className={`flex items-center gap-3 p-3.5 rounded-2xl border transition-all duration-200 ${checked?"bg-[#E6F4EA] border-[#A3E4D7]":"bg-white border-[#F0F4F2] active:border-[#A3E4D7]"}`}>
+      <button onClick={onToggle} className="shrink-0 w-8 h-8 flex items-center justify-center">
+        <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-200 ${checked?"bg-[#0B3C26] border-[#0B3C26]":"border-[#D0D8D4]"}`}>
+          {checked&&<svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+        </div>
       </button>
       <button onClick={onDetail} className="flex-1 text-left min-w-0">
         <div className="flex items-center gap-1.5 mb-0.5">
           <span className="text-sm leading-none">{amal.icon}</span>
           <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-100 text-orange-700">যিকর</span>
         </div>
-        <p className={`text-sm font-semibold leading-tight ${done?"text-[#0B3C26]/50":"text-[#1C2833]"}`}>{amal.title}</p>
-        <div className="flex items-center gap-2 mt-1.5">
-          <div className="flex-1 h-1 bg-[#F0F4F2] rounded-full overflow-hidden">
-            <div className="h-full bg-[#A3E4D7] rounded-full transition-all duration-300" style={{width:`${pct}%`}}/>
-          </div>
-          <span className="text-[#AEB6BF] text-[10px] shrink-0">{toBn(count)}/{toBn(target)}</span>
-        </div>
+        <p className={`text-sm font-semibold leading-tight ${checked?"text-[#0B3C26]/50 line-through":"text-[#1C2833]"}`}>{amal.title}</p>
+        {amal.subtitle&&<p className="text-[11px] text-[#AEB6BF] mt-0.5 leading-tight">{amal.subtitle}</p>}
       </button>
-      <span className={`shrink-0 text-xs font-bold px-2 py-1 rounded-full whitespace-nowrap ${done?"bg-[#0B3C26] text-white":"bg-[#E6F4EA] text-[#0B3C26]"}`}>
-        +{toBn(amal.points)}
-      </span>
+      <div className="shrink-0 flex items-center gap-2">
+        <span className={`text-xs font-bold px-2 py-1 rounded-full whitespace-nowrap ${checked?"bg-[#0B3C26] text-white":"bg-[#E6F4EA] text-[#0B3C26]"}`}>+{toBn(amal.points)}</span>
+        <button onClick={onDetail} className="w-7 h-7 rounded-full bg-[#F5F5F5] flex items-center justify-center text-[#AEB6BF]">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+        </button>
+      </div>
     </div>
   );
 }
@@ -326,7 +316,6 @@ function AmalDetail({amal,onClose}:{amal:Amal;onClose:()=>void}) {
 export default function DashboardPage() {
   const [day,setDay]=useState(1);
   const [allCompleted,setAllCompleted]=useState<Record<number,string[]>>({});
-  const [dhikrCounts,setDhikrCounts]=useState<Record<number,Record<string,number>>>({});
   const [selectedAmal,setSelectedAmal]=useState<Amal|null>(null);
   const [confetti,setConfetti]=useState(false);
   const [celebConfetti,setCelebConfetti]=useState(false);
@@ -338,12 +327,12 @@ export default function DashboardPage() {
   const [gender,setGender]=useState<"male"|"female"|null>(null);
   const [userId,setUserId]=useState<string|null>(null);
   const [showDay10Celebration,setShowDay10Celebration]=useState(false);
+  const [profileIncomplete,setProfileIncomplete]=useState(false);
 
   useEffect(()=>{
     setDay(getCurrentDhulHijjahDay()??1);
     setAllCompleted(loadCompleted());
-    setDhikrCounts(loadDhikrCounts());
-    setGender(loadGender());
+setGender(loadGender());
     setMounted(true);
     createClient().auth.getUser().then(({data})=>{
       const u=data.user; if(!u) return;
@@ -352,6 +341,10 @@ export default function DashboardPage() {
       setUserName(name);
       setUserAvatar(u.user_metadata?.avatar_url??null);
       if(name) setUserInitial(name.charAt(0).toUpperCase());
+      // Profile is incomplete if no explicit name or no gender set
+      const savedGender=loadGender();
+      const explicitName=(u.user_metadata?.full_name??u.user_metadata?.name??"").trim();
+      setProfileIncomplete(!explicitName||!savedGender);
     });
   },[]);
 
@@ -375,14 +368,15 @@ export default function DashboardPage() {
 
   const completed=allCompleted[day]??[];
   const dayAmal=getAmalForDay(day);
+  const mandatoryAmal=dayAmal.filter(a=>!a.optional);
   const points=calculatePoints(completed,day);
-  const pct=dayAmal.length>0?Math.round(completed.length/dayAmal.length*100):0;
+  const mandatoryCompleted=completed.filter(id=>mandatoryAmal.some(a=>a.id===id));
+  const pct=mandatoryAmal.length>0?Math.round(mandatoryCompleted.length/mandatoryAmal.length*100):0;
   const streak=Object.keys(allCompleted).length;
   const hadith=HADITHS[day%HADITHS.length];
   const dayDate=getDayCalDate(day);
   const dayOrdinal=getDayOrdinal(day);
   const nextSpecialDay=day===8?9:day===9?10:null;
-  const todayDhikr=dhikrCounts[day]??{};
 
   const toggle=useCallback((id:string)=>{
     setAllCompleted(prev=>{
@@ -393,7 +387,8 @@ export default function DashboardPage() {
       if(!cur.includes(id)){
         setConfetti(true);
         setTimeout(()=>setConfetti(false),100);
-        if(next.length===getAmalForDay(day).length){
+        const mandatory=getAmalForDay(day).filter(a=>!a.optional);
+        if(mandatory.length>0&&next.filter(i=>mandatory.some(a=>a.id===i)).length===mandatory.length){
           setCelebConfetti(true);
           setTimeout(()=>setCelebConfetti(false),100);
           if(day===10) setTimeout(()=>setShowDay10Celebration(true),800);
@@ -403,30 +398,6 @@ export default function DashboardPage() {
     });
   },[day]);
 
-  const incrementDhikr=useCallback((id:string,target:number)=>{
-    setDhikrCounts(prev=>{
-      const dayMap=prev[day]??{};
-      const cur=dayMap[id]??0;
-      if(cur>=target) return prev;
-      const newCount=cur+1;
-      const newDayMap={...dayMap,[id]:newCount};
-      const next={...prev,[day]:newDayMap};
-      saveDhikrCounts(next);
-      // Auto-complete when target reached
-      if(newCount>=target){
-        setAllCompleted(prevCompleted=>{
-          const curCompleted=prevCompleted[day]??[];
-          if(curCompleted.includes(id)) return prevCompleted;
-          const updated={...prevCompleted,[day]:[...curCompleted,id]};
-          saveCompleted(updated);
-          setConfetti(true);
-          setTimeout(()=>setConfetti(false),100);
-          return updated;
-        });
-      }
-      return next;
-    });
-  },[day]);
 
   const vcatInfo=VCAT.map(vc=>{
     const items=vc.ids
@@ -439,7 +410,7 @@ export default function DashboardPage() {
     return {...vc,items,done,p};
   }).filter(vc=>vc.items.length>0);
 
-  const isDay10Complete=day===10&&dayAmal.length>0&&completed.length>=dayAmal.length;
+  const isDay10Complete=day===10&&mandatoryAmal.length>0&&mandatoryCompleted.length>=mandatoryAmal.length;
 
   const filteredAmal=dayAmal.filter(a=>{
     if(filter==="remaining") return !completed.includes(a.id);
@@ -641,12 +612,24 @@ export default function DashboardPage() {
                 <div className="flex-1">
                   <p className="text-emerald-800 font-bold text-sm">আগামীকাল ঈদুল আজহা!</p>
                   <p className="text-emerald-700 text-xs mt-0.5 leading-relaxed">গোসল করুন, উত্তম পোশাক পরুন, ঈদগাহে যান এবং কুরবানি করুন। আজ রাতেই প্রস্তুতি নিন।</p>
-                  <a href="https://www.youtube.com/watch?v=DZ4LTOEjnXU" target="_blank" rel="noopener noreferrer"
+                  <a href="https://www.youtube.com/watch?v=QJoHl4RJADk" target="_blank" rel="noopener noreferrer"
                     className="inline-flex items-center gap-1 mt-2 text-emerald-700 text-xs font-semibold hover:text-emerald-900 transition-colors">
                     <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M23.5 6.19a3.02 3.02 0 00-2.12-2.14C19.52 3.5 12 3.5 12 3.5s-7.52 0-9.38.55A3.02 3.02 0 00.5 6.19C0 8.07 0 12 0 12s0 3.93.5 5.81a3.02 3.02 0 002.12 2.14C4.48 20.5 12 20.5 12 20.5s7.52 0 9.38-.55a3.02 3.02 0 002.12-2.14C24 15.93 24 12 24 12s0-3.93-.5-5.81zM9.75 15.5v-7l6.5 3.5-6.5 3.5z"/></svg>
                     ঈদের আমল সম্পর্কে ভিডিও দেখুন ↗
                   </a>
                 </div>
+              </div>
+            )}
+
+            {/* ── PROFILE INCOMPLETE NOTICE ──────────────────────────────── */}
+            {profileIncomplete&&(
+              <div className="bg-amber-50 border border-amber-300 rounded-2xl p-4 flex items-start gap-3">
+                <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center text-xl shrink-0">👤</div>
+                <div className="flex-1">
+                  <p className="text-amber-800 font-bold text-sm">প্রোফাইল অসম্পূর্ণ</p>
+                  <p className="text-amber-700 text-xs mt-0.5 leading-relaxed">নাম ও লিঙ্গ সেট করুন — আমল তালিকা আপনার জন্য কাস্টমাইজ হবে।</p>
+                </div>
+                <Link href="/profile" className="shrink-0 bg-amber-700 text-white text-[10px] font-bold px-3 py-1.5 rounded-xl whitespace-nowrap">সেটআপ করুন</Link>
               </div>
             )}
 
@@ -742,8 +725,8 @@ export default function DashboardPage() {
                   {filteredAmal.map(amal=>(
                     amal.countable
                       ?<DhikrRow key={amal.id} amal={amal}
-                          count={todayDhikr[amal.id]??0}
-                          onIncrement={()=>incrementDhikr(amal.id,amal.countTarget??33)}
+                          checked={completed.includes(amal.id)}
+                          onToggle={()=>toggle(amal.id)}
                           onDetail={()=>setSelectedAmal(amal)}
                         />
                       :<AmalRow key={amal.id} amal={amal}
@@ -793,7 +776,7 @@ export default function DashboardPage() {
                     <p className="text-emerald-600 text-xs mt-0.5">আগামীকাল · ১০ জিলহজ</p>
                   </div>
                 </div>
-                <a href="https://www.youtube.com/watch?v=DZ4LTOEjnXU" target="_blank" rel="noopener noreferrer"
+                <a href="https://www.youtube.com/watch?v=QJoHl4RJADk  " target="_blank" rel="noopener noreferrer"
                   className="block w-full py-2.5 bg-emerald-700 text-white text-xs font-bold rounded-xl text-center active:scale-95 transition-transform">
                   ঈদের আমল ভিডিও ↗
                 </a>
