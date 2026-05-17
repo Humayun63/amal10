@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { Hind_Siliguri } from "next/font/google";
 import "./globals.css";
+import AppInit from "@/components/AppInit";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -46,6 +47,7 @@ export default function RootLayout({
       className={`${inter.variable} ${hindSiliguri.variable} h-full`}
     >
       <body className="min-h-full bg-[#FAFAF9] text-[#1C2833] antialiased">
+        <AppInit />
         {children}
       </body>
     </html>

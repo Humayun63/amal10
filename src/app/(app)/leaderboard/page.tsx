@@ -12,16 +12,16 @@ interface LeaderboardEntry {
 }
 
 const MOCK_DATA: LeaderboardEntry[] = [
-  { rank: 1, name: "আব্দুল্লাহ আল-মামুন", points: 1240, streak: 10, avatar: "👨" },
-  { rank: 2, name: "ফাতেমা খানম", points: 1180, streak: 9, avatar: "👩" },
-  { rank: 3, name: "মুহাম্মদ রাহিম", points: 1120, streak: 10, avatar: "🧔" },
+  { rank: 1, name: "আব্দুল্লাহ আল-মামুন", points: 1240, streak: 10, avatar: "আ" },
+  { rank: 2, name: "ফাতেমা খানম", points: 1180, streak: 9, avatar: "ফা" },
+  { rank: 3, name: "মুহাম্মদ রাহিম", points: 1120, streak: 10, avatar: "মু" },
   { rank: 4, name: "আপনি", points: 980, streak: 7, avatar: "⭐", isCurrentUser: true },
-  { rank: 5, name: "নুসরাত জাহান", points: 940, streak: 8, avatar: "👧" },
-  { rank: 6, name: "ইব্রাহিম হোসেন", points: 900, streak: 6, avatar: "👨‍🦱" },
-  { rank: 7, name: "মরিয়ম বেগম", points: 860, streak: 5, avatar: "👩‍🦰" },
-  { rank: 8, name: "তারিক আনোয়ার", points: 820, streak: 7, avatar: "🧑" },
-  { rank: 9, name: "সামিরা ইসলাম", points: 780, streak: 4, avatar: "👩‍🦱" },
-  { rank: 10, name: "ইউসুফ মিয়া", points: 740, streak: 6, avatar: "👴" },
+  { rank: 5, name: "নুসরাত জাহান", points: 940, streak: 8, avatar: "নু" },
+  { rank: 6, name: "ইব্রাহিম হোসেন", points: 900, streak: 6, avatar: "ই" },
+  { rank: 7, name: "মরিয়ম বেগম", points: 860, streak: 5, avatar: "ম" },
+  { rank: 8, name: "তারিক আনোয়ার", points: 820, streak: 7, avatar: "তা" },
+  { rank: 9, name: "সামিরা ইসলাম", points: 780, streak: 4, avatar: "সা" },
+  { rank: 10, name: "ইউসুফ মিয়া", points: 740, streak: 6, avatar: "ইউ" },
 ];
 
 function RankBadge({ rank }: { rank: number }) {

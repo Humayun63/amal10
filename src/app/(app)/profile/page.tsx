@@ -1,8 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { BADGES, getEarnedBadges, type BadgeConditionData } from "@/lib/data/badges";
 import { calculatePoints, getAmalForDay } from "@/lib/data/amal";
+import { createClient } from "@/lib/supabase/client";
+import type { User } from "@supabase/supabase-js";
 
 const STORAGE_KEY = "amal_completed";
 
@@ -16,6 +19,14 @@ function loadCompleted(): Record<number, string[]> {
 
 export default function ProfilePage() {
   const [allCompleted, setAllCompleted] = useState<Record<number, string[]>>({});
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    setAllCompleted(loadCompleted());
+    createClient()
+      .auth.getUser()
+      .then(({ data }) => setUser(data.user));
+  }, []);
 
   useEffect(() => {
     setAllCompleted(loadCompleted());
@@ -46,11 +57,32 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-[#FAFAF9]">
       {/* Header */}
       <div className="bg-[#0B3C26] text-white px-4 pt-14 pb-8 text-center">
-        <div className="w-20 h-20 rounded-full bg-[#A3E4D7] flex items-center justify-center text-4xl mx-auto mb-3">
-          🧑
+        <div className="w-20 h-20 rounded-full bg-[#A3E4D7] flex items-center justify-center text-4xl mx-auto mb-3 overflow-hidden border-2 border-white/20">
+          {user?.user_metadata?.avatar_url ? (
+            <Image
+              src={user.user_metadata.avatar_url}
+              alt="profile"
+              width={80}
+              height={80}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <span className="text-2xl font-bold text-[#0B3C26]">
+              {(user?.user_metadata?.full_name ?? user?.user_metadata?.name ?? user?.email ?? "M")
+                .charAt(0)
+                .toUpperCase()}
+            </span>
+          )}
         </div>
-        <h1 className="text-[20px] font-bold">মুসলিম ব্যবহারকারী</h1>
-        <p className="text-[#A3E4D7] text-sm mt-1">জিলহজ আমল চ্যালেঞ্জ অংশগ্রহণকারী</p>
+        <h1 className="text-[20px] font-bold">
+          {user?.user_metadata?.full_name ??
+            user?.user_metadata?.name ??
+            user?.email?.split("@")[0] ??
+            "মুসলিম ব্যবহারকারী"}
+        </h1>
+        <p className="text-[#A3E4D7] text-sm mt-1">
+          {user?.email ?? "জিলহজ আমল চ্যালেঞ্জ অংশগ্রহণকারী"}
+        </p>
       </div>
 
       <div className="px-4 py-4 max-w-lg mx-auto flex flex-col gap-5">
