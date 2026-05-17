@@ -1,0 +1,80 @@
+@import "tailwindcss";
+
+:root {
+  --color-emerald: #0B3C26;
+  --color-mint: #E6F4EA;
+  --color-sage: #A3E4D7;
+  --color-canvas: #FAFAF9;
+  --color-charcoal: #1C2833;
+  --color-muted: #AEB6BF;
+  --color-gold: #D4AC0D;
+}
+
+@theme inline {
+  --color-background: var(--color-canvas);
+  --color-foreground: var(--color-charcoal);
+  --font-bengali: var(--font-hind-siliguri);
+  --font-sans: var(--font-inter);
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-canvas);
+  color: var(--color-charcoal);
+  font-family: var(--font-hind-siliguri), var(--font-inter), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior: none;
+}
+
+/* Bottom sheet animation */
+@keyframes slide-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes pulse-fire {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}
+
+@keyframes check-pop {
+  0% { transform: scale(0.8); opacity: 0.5; }
+  60% { transform: scale(1.2); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.animate-slide-up { animation: slide-up 300ms cubic-bezier(0.32, 0.72, 0, 1); }
+.animate-fade-in { animation: fade-in 200ms ease-out; }
+.animate-pulse-fire { animation: pulse-fire 2s ease-in-out infinite; }
+.animate-check-pop { animation: check-pop 250ms ease-out; }
+
+/* Progress bar fill transition */
+.progress-fill {
+  transition: width 600ms cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/* Tab transition */
+.tab-transition {
+  transition: all 200ms ease-in-out;
+}
+
+/* Safe area padding for iOS */
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Scrollbar hidden */
+.scrollbar-hidden::-webkit-scrollbar { display: none; }
+.scrollbar-hidden { -ms-overflow-style: none; scrollbar-width: none; }
