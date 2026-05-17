@@ -516,7 +516,7 @@ setGender(loadGender());
         {/* ── DESKTOP GREETING ──────────────────────────────────────────── */}
         <div className="hidden md:block px-6 pt-5 pb-1">
           <h1 className="text-[#1C2833] text-xl font-bold">
-            আসসালামু আলাইকুম, {userName?`${userName} ভাই`:"স্বাগতম"} 🌙
+            আসসালামু আলাইকুম, {userName?`${userName}${gender==="female"?" আপু":" ভাই"}`:"স্বাগতম"} 🌙
           </h1>
         </div>
 
