@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import { Hind_Siliguri } from "next/font/google";
 import "./globals.css";
 import AppInit from "@/components/AppInit";
+import PWAInstallBanner from "@/components/PWAInstallBanner";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -22,6 +23,12 @@ export const metadata: Metadata = {
   description:
     "জিলহজ মাসের ১০ দিনের আমল ট্র্যাক করুন। গ্যামিফাইড চ্যালেঞ্জে যোগ দিন এবং আইয়ামে তাশরীকের তাকবীর আদায় করুন।",
   keywords: ["জিলহজ", "আমল", "ইসলাম", "তাকবীর", "dhul hijjah", "amal tracker"],
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "আমল",
+  },
   openGraph: {
     title: "জিলহজ আমল চ্যালেঞ্জ",
     description: "জিলহজ মাসের ১০ দিনের আমল ট্র্যাকার ও গ্যামিফাইড চ্যালেঞ্জ",
@@ -48,6 +55,7 @@ export default function RootLayout({
     >
       <body className="min-h-full bg-[#FAFAF9] text-[#1C2833] antialiased">
         <AppInit />
+        <PWAInstallBanner />
         {children}
       </body>
     </html>

@@ -6,6 +6,8 @@ import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { fetchCommunityStats } from "@/lib/supabase/scores";
 import Link from "next/link";
+import Image from "next/image";
+import { onPromptReady, triggerInstall, isIOS, isInStandaloneMode } from "@/lib/pwa";
 
 function toBn(n: number): string {
   return n.toString().replace(/[0-9]/g, (d) => "০১২৩৪৫৬৭৮৯"[+d]);
@@ -18,9 +20,18 @@ export default function SignInPage() {
   const [error, setError] = useState("");
   const [showEmailForm, setShowEmailForm] = useState(false);
   const [participantCount, setParticipantCount] = useState(0);
+  const [canInstall, setCanInstall] = useState(false);
+  const [isIOSDevice, setIsIOSDevice] = useState(false);
+  const [showIOSGuide, setShowIOSGuide] = useState(false);
 
   useEffect(() => {
     fetchCommunityStats().then((s) => setParticipantCount(s.totalParticipants));
+    if (isInStandaloneMode()) return;
+    const ios = isIOS();
+    setIsIOSDevice(ios);
+    if (ios) { setCanInstall(true); return; }
+    const unsub = onPromptReady(() => setCanInstall(true));
+    return unsub;
   }, []);
 
   const handleMagicLink = async (e: React.FormEvent) => {
@@ -61,19 +72,9 @@ export default function SignInPage() {
         <div className="absolute top-1/3 right-8 w-3 h-3 rounded-full bg-[#A3E4D7]/40" />
         <div className="absolute bottom-1/4 left-12 w-2 h-2 rounded-full bg-[#A3E4D7]/40" />
 
-        {/* Islamic crescent / moon icon */}
+        {/* Logo */}
         <div className="relative mb-5 z-10">
-          <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-sm">
-            <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-              <path
-                d="M26 16a10 10 0 01-13.5 9.33A10 10 0 1016 6a10 10 0 0110 10z"
-                fill="none"
-                stroke="#A3E4D7"
-                strokeWidth="1.5"
-              />
-              <circle cx="21" cy="10" r="1.5" fill="#A3E4D7" opacity="0.6" />
-            </svg>
-          </div>
+          <Image src="/logo.png" alt="আমল লোগো" width={80} height={82} className="w-20 h-20 object-contain drop-shadow-lg"/>
         </div>
 
         {/* Greeting */}
@@ -105,16 +106,69 @@ export default function SignInPage() {
         <div className="mt-6 flex items-center gap-2 z-10">
           <div className="flex -space-x-2">
             {[0, 1, 2].map((i) => (
-              <div
-                key={i}
-                className="w-7 h-7 rounded-full bg-white/20 border border-white/30"
-              />
+              <div key={i} className="w-7 h-7 rounded-full bg-white/20 border border-white/30"/>
             ))}
           </div>
           <span className="text-[#A3E4D7] text-xs">
             {participantCount > 0 ? `${toBn(participantCount)}+ মুসলিম চ্যালেঞ্জে` : "চ্যালেঞ্জে যোগ দিন"}
           </span>
         </div>
+
+        {/* PWA install */}
+        {canInstall && (
+          <div className="mt-5 z-10 w-full max-w-xs">
+            <button
+              onClick={async () => {
+                if (isIOSDevice) { setShowIOSGuide(true); return; }
+                await triggerInstall();
+              }}
+              className="w-full flex items-center gap-3 bg-white/10 hover:bg-white/15 border border-white/20 rounded-2xl px-4 py-3 transition-colors active:scale-95"
+            >
+              <Image src="/logo.png" alt="আমল" width={36} height={37} className="w-9 h-9 object-contain shrink-0"/>
+              <div className="flex-1 text-left">
+                <p className="text-white font-semibold text-sm">অ্যাপ ইনস্টল করুন</p>
+                <p className="text-[#A3E4D7] text-xs mt-0.5">হোম স্ক্রিনে যোগ করুন</p>
+              </div>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-[#A3E4D7] shrink-0">
+                <path d="M12 3v13M5 13l7 7 7-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+          </div>
+        )}
+
+        {/* iOS Add to Home Screen guide */}
+        {showIOSGuide && (
+          <div className="fixed inset-0 z-70 flex items-end justify-center p-4">
+            <div className="absolute inset-0 bg-black/50" onClick={() => setShowIOSGuide(false)}/>
+            <div className="relative w-full max-w-sm bg-white rounded-3xl p-5 z-10">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <Image src="/logo.png" alt="আমল" width={36} height={37} className="w-9 h-9 object-contain"/>
+                  <p className="text-[#0B3C26] font-bold text-base">হোম স্ক্রিনে যোগ করুন</p>
+                </div>
+                <button onClick={() => setShowIOSGuide(false)} className="w-8 h-8 rounded-full bg-[#F5F5F5] flex items-center justify-center">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="#1C2833" strokeWidth="2" strokeLinecap="round"/></svg>
+                </button>
+              </div>
+              <div className="flex flex-col gap-3">
+                {([
+                  ["১", "⬆️", "নিচে Safari-এর শেয়ার বাটন ট্যাপ করুন"],
+                  ["২", "➕", '"Add to Home Screen" বেছে নিন'],
+                  ["৩", "✅", '"Add" বাটন ট্যাপ করুন — ব্যস!'],
+                ] as const).map(([step, icon, text]) => (
+                  <div key={step} className="flex items-center gap-3 bg-[#FAFAF9] rounded-xl px-4 py-3 border border-[#E6F4EA]">
+                    <span className="w-7 h-7 rounded-full bg-[#0B3C26] text-white text-xs font-bold flex items-center justify-center shrink-0">{step}</span>
+                    <span className="text-lg shrink-0">{icon}</span>
+                    <p className="text-[#1C2833] text-sm">{text}</p>
+                  </div>
+                ))}
+              </div>
+              <button onClick={() => setShowIOSGuide(false)} className="w-full mt-4 py-3 bg-[#0B3C26] text-white font-bold rounded-xl text-sm active:scale-95 transition-transform">
+                বুঝেছি ✓
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ── Right / Bottom: Auth Form ── */}

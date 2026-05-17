@@ -245,136 +245,148 @@ function ShareCardModal({ displayName, streak, totalPoints, onClose }: {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
 
-    const W = 800, H = 800;
-    canvas.width = W;
-    canvas.height = H;
+    const logoImg = new window.Image();
+    logoImg.src = "/logo.png";
+    logoImg.onload = () => {
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
 
-    // Background
-    const grad = ctx.createLinearGradient(0, 0, W, H);
-    grad.addColorStop(0, "#0B3C26");
-    grad.addColorStop(1, "#145A3A");
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, W, H);
+      const W = 800, H = 800;
+      canvas.width = W;
+      canvas.height = H;
 
-    // Decorative circles (top-right corner)
-    ctx.strokeStyle = "rgba(255,255,255,0.06)";
-    ctx.lineWidth = 1;
-    [320, 270, 220, 170, 120, 70].forEach(r => {
+      // Background
+      const grad = ctx.createLinearGradient(0, 0, W, H);
+      grad.addColorStop(0, "#0B3C26");
+      grad.addColorStop(1, "#145A3A");
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, W, H);
+
+      // Decorative circles (top-right corner)
+      ctx.strokeStyle = "rgba(255,255,255,0.06)";
+      ctx.lineWidth = 1;
+      [320, 270, 220, 170, 120, 70].forEach(r => {
+        ctx.beginPath();
+        ctx.arc(W, 0, r, 0, Math.PI * 2);
+        ctx.stroke();
+      });
+
+      // Decorative circles (bottom-left corner)
+      [200, 160, 120].forEach(r => {
+        ctx.beginPath();
+        ctx.arc(0, H, r, 0, Math.PI * 2);
+        ctx.stroke();
+      });
+
+      // ── Top header: logo + app name ──────────────────────────────────────
+      const logoSize = 52;
+      const logoX = W / 2 - logoSize / 2;
+      ctx.drawImage(logoImg, logoX, 14, logoSize, logoSize);
+
+      ctx.fillStyle = "#FFFFFF";
+      ctx.font = "bold 24px Arial, sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "alphabetic";
+      ctx.fillText("আমল চ্যালেঞ্জ", W / 2, 86);
+
+      ctx.fillStyle = "rgba(163,228,215,0.65)";
+      ctx.font = "15px Arial, sans-serif";
+      ctx.fillText("জিলহজ ১৪৪৭", W / 2, 106);
+
+      // Thin top divider
+      ctx.fillStyle = "rgba(255,255,255,0.08)";
+      ctx.fillRect(80, 118, W - 160, 1);
+
+      // Avatar circle
+      const cx = W / 2, cy = 252;
+      ctx.fillStyle = "rgba(163,228,215,0.15)";
       ctx.beginPath();
-      ctx.arc(W, 0, r, 0, Math.PI * 2);
-      ctx.stroke();
-    });
-
-    // Decorative circles (bottom-left corner)
-    [200, 160, 120].forEach(r => {
+      ctx.arc(cx, cy, 90, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#A3E4D7";
+      ctx.lineWidth = 3;
       ctx.beginPath();
-      ctx.arc(0, H, r, 0, Math.PI * 2);
+      ctx.arc(cx, cy, 90, 0, Math.PI * 2);
       ctx.stroke();
-    });
 
-    // Top label
-    ctx.fillStyle = "rgba(163,228,215,0.7)";
-    ctx.font = "bold 22px Arial, sans-serif";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "alphabetic";
-    ctx.fillText("জিলহজ আমল চ্যালেঞ্জ ১৪৪৭", W / 2, 70);
+      // Avatar initial
+      ctx.fillStyle = "#A3E4D7";
+      ctx.font = "bold 80px Arial, sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(displayName.charAt(0).toUpperCase() || "আ", cx, cy + 4);
 
-    // Thin top divider
-    ctx.fillStyle = "rgba(255,255,255,0.08)";
-    ctx.fillRect(80, 88, W - 160, 1);
+      // Name
+      ctx.fillStyle = "#FFFFFF";
+      ctx.font = "bold 44px Arial, sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "alphabetic";
+      ctx.fillText(displayName || "মুসলিম", W / 2, 402);
 
-    // Avatar circle
-    const cx = W / 2, cy = 230;
-    ctx.fillStyle = "rgba(163,228,215,0.15)";
-    ctx.beginPath();
-    ctx.arc(cx, cy, 90, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = "#A3E4D7";
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.arc(cx, cy, 90, 0, Math.PI * 2);
-    ctx.stroke();
+      // Subtitle
+      ctx.fillStyle = "rgba(163,228,215,0.8)";
+      ctx.font = "22px Arial, sans-serif";
+      ctx.fillText("জিলহজ আমল চ্যালেঞ্জে অংশগ্রহণকারী", W / 2, 438);
 
-    // Avatar initial
-    ctx.fillStyle = "#A3E4D7";
-    ctx.font = "bold 80px Arial, sans-serif";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(displayName.charAt(0).toUpperCase() || "আ", cx, cy + 4);
+      // Divider
+      ctx.fillStyle = "rgba(255,255,255,0.12)";
+      ctx.fillRect(80, 465, W - 160, 1);
 
-    // Name
-    ctx.fillStyle = "#FFFFFF";
-    ctx.font = "bold 44px Arial, sans-serif";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "alphabetic";
-    ctx.fillText(displayName || "মুসলিম", W / 2, 380);
+      // Stat boxes — 3 equal columns
+      function drawStat(c: CanvasRenderingContext2D, x: number, label: string, value: string, color: string) {
+        const bx = x, by = 484, bw = 196, bh = 148, br = 16;
+        c.fillStyle = "rgba(255,255,255,0.07)";
+        c.beginPath();
+        c.moveTo(bx + br, by);
+        c.lineTo(bx + bw - br, by);
+        c.quadraticCurveTo(bx + bw, by, bx + bw, by + br);
+        c.lineTo(bx + bw, by + bh - br);
+        c.quadraticCurveTo(bx + bw, by + bh, bx + bw - br, by + bh);
+        c.lineTo(bx + br, by + bh);
+        c.quadraticCurveTo(bx, by + bh, bx, by + bh - br);
+        c.lineTo(bx, by + br);
+        c.quadraticCurveTo(bx, by, bx + br, by);
+        c.closePath();
+        c.fill();
 
-    // Subtitle
-    ctx.fillStyle = "rgba(163,228,215,0.8)";
-    ctx.font = "22px Arial, sans-serif";
-    ctx.fillText("জিলহজ আমল চ্যালেঞ্জে অংশগ্রহণকারী", W / 2, 418);
+        c.fillStyle = color;
+        c.font = "bold 46px Arial, sans-serif";
+        c.textAlign = "center";
+        c.textBaseline = "alphabetic";
+        c.fillText(value, bx + bw / 2, by + 90);
 
-    // Divider
-    ctx.fillStyle = "rgba(255,255,255,0.12)";
-    ctx.fillRect(80, 448, W - 160, 1);
+        c.fillStyle = "rgba(255,255,255,0.5)";
+        c.font = "18px Arial, sans-serif";
+        c.fillText(label, bx + bw / 2, by + 126);
+      }
 
-    // Stat boxes — 3 equal columns
-    function drawStat(c: CanvasRenderingContext2D, x: number, label: string, value: string, color: string) {
-      const bx = x, by = 468, bw = 196, bh = 150, br = 16;
-      c.fillStyle = "rgba(255,255,255,0.07)";
-      c.beginPath();
-      c.moveTo(bx + br, by);
-      c.lineTo(bx + bw - br, by);
-      c.quadraticCurveTo(bx + bw, by, bx + bw, by + br);
-      c.lineTo(bx + bw, by + bh - br);
-      c.quadraticCurveTo(bx + bw, by + bh, bx + bw - br, by + bh);
-      c.lineTo(bx + br, by + bh);
-      c.quadraticCurveTo(bx, by + bh, bx, by + bh - br);
-      c.lineTo(bx, by + br);
-      c.quadraticCurveTo(bx, by, bx + br, by);
-      c.closePath();
-      c.fill();
+      drawStat(ctx, 86,  "স্ট্রেইক", `${streak} দিন`, "#F4A261");
+      drawStat(ctx, 302, "পয়েন্ট",  `${totalPoints}`,  "#A3E4D7");
+      drawStat(ctx, 518, "চ্যালেঞ্জ", "জিলহজ",         "#E9D8A6");
 
-      c.fillStyle = color;
-      c.font = "bold 46px Arial, sans-serif";
-      c.textAlign = "center";
-      c.textBaseline = "alphabetic";
-      c.fillText(value, bx + bw / 2, by + 92);
+      // ── Footer: logo + name + URL ─────────────────────────────────────────
+      ctx.fillStyle = "rgba(255,255,255,0.10)";
+      ctx.fillRect(80, 660, W - 160, 1);
 
-      c.fillStyle = "rgba(255,255,255,0.5)";
-      c.font = "18px Arial, sans-serif";
-      c.fillText(label, bx + bw / 2, by + 128);
-    }
+      // Logo centered in footer
+      const fLogoSize = 44;
+      ctx.drawImage(logoImg, W / 2 - fLogoSize / 2, 672, fLogoSize, fLogoSize);
 
-    // 3 boxes, total width = 3×196 + 2×20 = 628, start at (800−628)/2 = 86
-    drawStat(ctx, 86,  "স্ট্রেইক", `${streak} দিন`, "#F4A261");
-    drawStat(ctx, 302, "পয়েন্ট",  `${totalPoints}`,  "#A3E4D7");
-    drawStat(ctx, 518, "চ্যালেঞ্জ", "জিলহজ",         "#E9D8A6");
+      ctx.fillStyle = "#FFFFFF";
+      ctx.font = "bold 20px Arial, sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "alphabetic";
+      ctx.fillText("আমল চ্যালেঞ্জ", W / 2, 732);
 
-    // Website URL section
-    ctx.fillStyle = "rgba(255,255,255,0.10)";
-    ctx.fillRect(80, 650, W - 160, 1);
+      ctx.fillStyle = "rgba(163,228,215,0.75)";
+      ctx.font = "17px Arial, sans-serif";
+      ctx.fillText(APP_URL, W / 2, 756);
 
-    ctx.fillStyle = "rgba(163,228,215,0.6)";
-    ctx.font = "bold 18px Arial, sans-serif";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "alphabetic";
-    ctx.fillText("আপনিও যোগ দিন", W / 2, 692);
-
-    ctx.fillStyle = "rgba(255,255,255,0.75)";
-    ctx.font = "20px Arial, sans-serif";
-    ctx.fillText(APP_URL, W / 2, 724);
-
-    // Crescent decoration (bottom-right)
-    ctx.strokeStyle = "rgba(163,228,215,0.35)";
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.arc(W - 50, H - 50, 32, 0.4, Math.PI * 1.7);
-    ctx.stroke();
-
+      ctx.fillStyle = "rgba(255,255,255,0.35)";
+      ctx.font = "14px Arial, sans-serif";
+      ctx.fillText("আপনিও যোগ দিন →", W / 2, 780);
+    };
   }, [displayName, streak, totalPoints]);
 
   function handleDownload() {
