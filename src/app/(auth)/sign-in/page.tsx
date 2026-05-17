@@ -3,6 +3,7 @@
 export const dynamic = "force-dynamic";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { fetchCommunityStats } from "@/lib/supabase/scores";
 import Link from "next/link";
@@ -14,6 +15,7 @@ function toBn(n: number): string {
 }
 
 export default function SignInPage() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -66,7 +68,7 @@ export default function SignInPage() {
     } else {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) { setError(error.message); setLoading(false); }
-      // On success Supabase auth state change triggers redirect
+      else { router.push("/dashboard"); router.refresh(); }
     }
   };
 

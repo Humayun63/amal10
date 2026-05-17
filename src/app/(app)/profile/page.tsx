@@ -556,9 +556,8 @@ export default function ProfilePage() {
 
   const lastActivityDay = Object.keys(allCompleted).map(Number).sort((a, b) => b - a)[0] ?? null;
 
-  async function handleSignOut() {
-    await createClient().auth.signOut();
-    window.location.href = "/";
+  function handleSignOut() {
+    window.location.href = "/auth/signout";
   }
 
   if (!mounted) return <div className="min-h-screen bg-[#FAFAF9]"/>;

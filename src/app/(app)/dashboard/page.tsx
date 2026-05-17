@@ -373,11 +373,14 @@ export default function DashboardPage() {
   const [showDay10Celebration,setShowDay10Celebration]=useState(false);
   const [profileIncomplete,setProfileIncomplete]=useState(false);
   const [isBeforeChallenge,setIsBeforeChallenge]=useState(false);
+  const [currentCalDay,setCurrentCalDay]=useState(1);
 
   useEffect(()=>{
     const beforeStart = new Date() < DHUL_HIJJAH_START;
     setIsBeforeChallenge(beforeStart);
-    setDay(getCurrentDhulHijjahDay()??1);
+    const calDay = getCurrentDhulHijjahDay()??1;
+    setDay(calDay);
+    setCurrentCalDay(calDay);
     setAllCompleted(loadCompleted());
 setGender(loadGender());
     setMounted(true);
@@ -415,7 +418,6 @@ setGender(loadGender());
   // eslint-disable-next-line react-hooks/exhaustive-deps
   },[allCompleted,userId]);
 
-  const currentCalDay=getCurrentDhulHijjahDay()??1;
   const isFutureDay=day>currentCalDay;
 
   const completed=allCompleted[day]??[];
