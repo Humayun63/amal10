@@ -11,7 +11,7 @@ import type { User } from "@supabase/supabase-js";
 const STORAGE_KEY = "amal_completed";
 const PROFILE_KEY = "user_profile";
 const PHOTO_KEY = "profile_photo_base64";
-const APP_URL = "https://github.com/Humayun63/amal10";
+const APP_URL = "https://amal10.netlify.app";
 
 interface UserProfile {
   name: string;
