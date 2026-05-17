@@ -110,8 +110,8 @@ export default function Sidebar() {
       <div className="px-5 py-5 border-b border-[#E6F4EA]">
         <div className="flex items-center gap-3">
           <div className="relative">
-            <div className="w-10 h-10 rounded-xl bg-[#0B3C26] flex items-center justify-center">
-              <span className="text-white text-xs font-bold">আমল</span>
+            <div className="w-10 h-10 flex items-center justify-center">
+              <Image src="/logo.png" alt="আমল লোগো" width={40} height={41} className="w-10 h-10 object-contain"/>
             </div>
             {currentDay && (
               <div className="absolute -top-1.5 -right-1.5 min-w-5 h-5 bg-red-500 rounded-full flex items-center justify-center px-1">

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { getTimeUntilStart, isChallengeLive } from "@/lib/utils/dhulHijjah";
 import { fetchCommunityStats, type CommunityStats } from "@/lib/supabase/scores";
 
@@ -187,7 +188,9 @@ export default function LandingPage() {
       {/* ── Navbar (desktop only) ── */}
       <nav className="hidden lg:flex items-center justify-between px-8 xl:px-16 h-16 bg-[#0B3C26] sticky top-0 z-50">
         <div className="flex items-center gap-3">
-          <span className="text-2xl">🕌</span>
+          <div className="w-9 h-9 rounded-xl bg-white flex items-center justify-center overflow-hidden">
+            <Image src="/logo.png" alt="আমল লোগো" width={32} height={33} className="w-8 h-8 object-contain"/>
+          </div>
           <div className="leading-none">
             <p className="text-white font-bold text-base tracking-tight">আমল</p>
             <p className="text-[#A3E4D7] text-[10px] font-medium tracking-widest uppercase">DHUL HIJJAH 10</p>
@@ -583,7 +586,9 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mb-4">
             <div className="flex items-center gap-2">
-              <span className="text-2xl">🕌</span>
+              <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center overflow-hidden">
+                <Image src="/logo.png" alt="আমল লোগো" width={28} height={29} className="w-7 h-7 object-contain"/>
+              </div>
               <div className="text-left">
                 <p className="text-white font-bold text-sm leading-tight">আমল</p>
                 <p className="text-[#A3E4D7] text-[10px] uppercase tracking-widest">DHUL HIJJAH 1447</p>

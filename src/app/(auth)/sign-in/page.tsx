@@ -222,15 +222,7 @@ export default function SignInPage() {
               </button>
             )}
 
-            {/* Guest mode */}
-            <div className="text-center mt-2">
-              <Link
-                href="/dashboard"
-                className="text-[#AEB6BF] text-sm hover:text-[#0B3C26] transition-colors"
-              >
-                অতিথি হিসেবে অন্বেষণ করুন →
-              </Link>
-            </div>
+            
 
           </div>
         )}
