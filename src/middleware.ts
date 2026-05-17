@@ -2,7 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const PROTECTED = ["/dashboard", "/leaderboard", "/insights", "/profile"];
+const PROTECTED = ["/dashboard", "/leaderboard", "/insights", "/profile", "/notifications", "/onboard", "/push-permission"];
 const AUTH_ONLY = ["/sign-in"]; // redirect away if already logged in
 
 export async function middleware(request: NextRequest) {

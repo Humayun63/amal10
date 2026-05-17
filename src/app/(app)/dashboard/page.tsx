@@ -7,7 +7,7 @@ import {
   getAmalForDay, calculatePoints, type Amal,
 } from "@/lib/data/amal";
 import {
-  getCurrentDhulHijjahDay, getDhulHijjahDateLabel, isTashriqDay,
+  getCurrentDhulHijjahDay, isTashriqDay,
   isArafahDay, isEidDay, DHUL_HIJJAH_START,
 } from "@/lib/utils/dhulHijjah";
 import BottomSheet from "@/components/ui/BottomSheet";
@@ -207,31 +207,38 @@ function SuhurIftarWidget() {
 }
 
 // Regular amal row (checkbox style)
-function AmalRow({amal, checked, onToggle, onDetail, gender}: {
-  amal:Amal; checked:boolean; onToggle:()=>void; onDetail:()=>void; gender:"male"|"female"|null;
+function AmalRow({amal, checked, onToggle, onDetail, gender, disabled}: {
+  amal:Amal; checked:boolean; onToggle:()=>void; onDetail:()=>void; gender:"male"|"female"|null; disabled?:boolean;
 }) {
   const badge={fard:"ফরজ",sunnah:"নফল",social:"সদকা"};
   const color={fard:"bg-emerald-100 text-[#0B3C26]",sunnah:"bg-purple-100 text-purple-700",social:"bg-teal-100 text-teal-700"};
   const title = gender==="female" && amal.femaleTitle ? amal.femaleTitle : amal.title;
   const isOptional = amal.optional === true;
   return (
-    <div className={`flex items-center gap-3 p-3.5 rounded-2xl border transition-all duration-200 ${checked?"bg-[#E6F4EA] border-[#A3E4D7]":"bg-white border-[#F0F4F2] active:border-[#A3E4D7]"}`}>
-      <button onClick={onToggle} className="shrink-0 w-8 h-8 flex items-center justify-center">
-        <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-200 ${checked?"bg-[#0B3C26] border-[#0B3C26]":"border-[#D0D8D4]"}`}>
-          {checked&&<svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>}
-        </div>
-      </button>
+    <div className={`flex items-center gap-3 p-3.5 rounded-2xl border transition-all duration-200 ${disabled?"bg-white border-[#F0F4F2] opacity-60":checked?"bg-[#E6F4EA] border-[#A3E4D7]":"bg-white border-[#F0F4F2] active:border-[#A3E4D7]"}`}>
+      <div className="shrink-0 w-8 h-8 flex items-center justify-center">
+        {disabled
+          ? <div className="w-6 h-6 rounded-full border-2 border-[#D0D8D4] bg-[#F5F5F5] flex items-center justify-center">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="M12 1C9.24 1 7 3.24 7 6v2H5a2 2 0 00-2 2v11a2 2 0 002 2h14a2 2 0 002-2V10a2 2 0 00-2-2h-2V6c0-2.76-2.24-5-5-5zm0 2c1.66 0 3 1.34 3 4v2H9V6c0-1.66 1.34-3 3-3z" fill="#AEB6BF"/></svg>
+            </div>
+          : <button onClick={onToggle} className="w-8 h-8 flex items-center justify-center">
+              <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-200 ${checked?"bg-[#0B3C26] border-[#0B3C26]":"border-[#D0D8D4]"}`}>
+                {checked&&<svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+              </div>
+            </button>
+        }
+      </div>
       <button onClick={onDetail} className="flex-1 text-left min-w-0">
         <div className="flex items-center gap-1.5 mb-0.5">
           <span className="text-sm leading-none">{amal.icon}</span>
           <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${color[amal.category]}`}>{badge[amal.category]}</span>
           {isOptional&&<span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">ঐচ্ছিক</span>}
         </div>
-        <p className={`text-sm font-semibold leading-tight ${checked?"text-[#0B3C26]/50 line-through":"text-[#1C2833]"}`}>{title}</p>
+        <p className={`text-sm font-semibold leading-tight ${checked&&!disabled?"text-[#0B3C26]/50 line-through":"text-[#1C2833]"}`}>{title}</p>
         {amal.subtitle&&<p className="text-[11px] text-[#AEB6BF] mt-0.5 leading-tight">{amal.subtitle}</p>}
       </button>
       <div className="shrink-0 flex items-center gap-2">
-        <span className={`text-xs font-bold px-2 py-1 rounded-full whitespace-nowrap ${checked?"bg-[#0B3C26] text-white":"bg-[#E6F4EA] text-[#0B3C26]"}`}>+{toBn(amal.points)}</span>
+        <span className={`text-xs font-bold px-2 py-1 rounded-full whitespace-nowrap ${checked&&!disabled?"bg-[#0B3C26] text-white":"bg-[#E6F4EA] text-[#0B3C26]"}`}>+{toBn(amal.points)}</span>
         <button onClick={onDetail} className="w-7 h-7 rounded-full bg-[#F5F5F5] flex items-center justify-center text-[#AEB6BF]">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
         </button>
@@ -241,26 +248,33 @@ function AmalRow({amal, checked, onToggle, onDetail, gender}: {
 }
 
 // Countable dhikr row — done/undone toggle
-function DhikrRow({amal, checked, onToggle, onDetail}: {
-  amal:Amal; checked:boolean; onToggle:()=>void; onDetail:()=>void;
+function DhikrRow({amal, checked, onToggle, onDetail, disabled}: {
+  amal:Amal; checked:boolean; onToggle:()=>void; onDetail:()=>void; disabled?:boolean;
 }) {
   return (
-    <div className={`flex items-center gap-3 p-3.5 rounded-2xl border transition-all duration-200 ${checked?"bg-[#E6F4EA] border-[#A3E4D7]":"bg-white border-[#F0F4F2] active:border-[#A3E4D7]"}`}>
-      <button onClick={onToggle} className="shrink-0 w-8 h-8 flex items-center justify-center">
-        <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-200 ${checked?"bg-[#0B3C26] border-[#0B3C26]":"border-[#D0D8D4]"}`}>
-          {checked&&<svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>}
-        </div>
-      </button>
+    <div className={`flex items-center gap-3 p-3.5 rounded-2xl border transition-all duration-200 ${disabled?"bg-white border-[#F0F4F2] opacity-60":checked?"bg-[#E6F4EA] border-[#A3E4D7]":"bg-white border-[#F0F4F2] active:border-[#A3E4D7]"}`}>
+      <div className="shrink-0 w-8 h-8 flex items-center justify-center">
+        {disabled
+          ? <div className="w-6 h-6 rounded-full border-2 border-[#D0D8D4] bg-[#F5F5F5] flex items-center justify-center">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="M12 1C9.24 1 7 3.24 7 6v2H5a2 2 0 00-2 2v11a2 2 0 002 2h14a2 2 0 002-2V10a2 2 0 00-2-2h-2V6c0-2.76-2.24-5-5-5zm0 2c1.66 0 3 1.34 3 4v2H9V6c0-1.66 1.34-3 3-3z" fill="#AEB6BF"/></svg>
+            </div>
+          : <button onClick={onToggle} className="w-8 h-8 flex items-center justify-center">
+              <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-200 ${checked?"bg-[#0B3C26] border-[#0B3C26]":"border-[#D0D8D4]"}`}>
+                {checked&&<svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+              </div>
+            </button>
+        }
+      </div>
       <button onClick={onDetail} className="flex-1 text-left min-w-0">
         <div className="flex items-center gap-1.5 mb-0.5">
           <span className="text-sm leading-none">{amal.icon}</span>
           <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-100 text-orange-700">যিকর</span>
         </div>
-        <p className={`text-sm font-semibold leading-tight ${checked?"text-[#0B3C26]/50 line-through":"text-[#1C2833]"}`}>{amal.title}</p>
+        <p className={`text-sm font-semibold leading-tight ${checked&&!disabled?"text-[#0B3C26]/50 line-through":"text-[#1C2833]"}`}>{amal.title}</p>
         {amal.subtitle&&<p className="text-[11px] text-[#AEB6BF] mt-0.5 leading-tight">{amal.subtitle}</p>}
       </button>
       <div className="shrink-0 flex items-center gap-2">
-        <span className={`text-xs font-bold px-2 py-1 rounded-full whitespace-nowrap ${checked?"bg-[#0B3C26] text-white":"bg-[#E6F4EA] text-[#0B3C26]"}`}>+{toBn(amal.points)}</span>
+        <span className={`text-xs font-bold px-2 py-1 rounded-full whitespace-nowrap ${checked&&!disabled?"bg-[#0B3C26] text-white":"bg-[#E6F4EA] text-[#0B3C26]"}`}>+{toBn(amal.points)}</span>
         <button onClick={onDetail} className="w-7 h-7 rounded-full bg-[#F5F5F5] flex items-center justify-center text-[#AEB6BF]">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
         </button>
@@ -355,7 +369,8 @@ setGender(loadGender());
   useEffect(()=>{
     if(!userId||!mounted) return;
     const totalPts=computeTotalPoints(allCompleted);
-    const todayPts=calculatePoints(allCompleted[day]??[],day);
+    const realToday=getCurrentDhulHijjahDay();
+    const todayPts=realToday?calculatePoints(allCompleted[realToday]??[],realToday):0;
     const streakDays=Object.keys(allCompleted).length;
     const initial=userName?userName.charAt(0).toUpperCase():"আ";
     syncUserScore({
@@ -368,6 +383,9 @@ setGender(loadGender());
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   },[allCompleted,userId]);
+
+  const currentCalDay=getCurrentDhulHijjahDay()??1;
+  const isFutureDay=day>currentCalDay;
 
   const completed=allCompleted[day]??[];
   const dayAmal=getAmalForDay(day);
@@ -543,7 +561,7 @@ setGender(loadGender());
                   <RingProgress pct={pct} size={90}/>
                 </div>
                 <div className="flex gap-1 mt-4 mb-3">
-                  {Array.from({length:10},(_,i)=>{
+                  {Array.from({length:13},(_,i)=>{
                     const d=i+1,c=allCompleted[d]??[],da=getAmalForDay(d);
                     const done=da.length>0&&c.length===da.length;
                     return <button key={d} onClick={()=>setDay(d)} className={`h-1.5 rounded-full transition-all flex-1 ${d===day?"bg-white scale-y-125":done?"bg-[#A3E4D7]":c.length>0?"bg-[#A3E4D7]/50":"bg-white/20"}`}/>;
@@ -565,7 +583,7 @@ setGender(loadGender());
                     এই দশ দিনের প্রতি দিন মূল্যবান। {toBn(completed.length)}টি আমল সম্পন্ন · আর {toBn(dayAmal.length-completed.length)}টি বাকি — চলুন আজকের অবশিষ্ট আমল পূর্ণ করি।
                   </p>
                   <div className="flex gap-1.5 mb-4">
-                    {Array.from({length:10},(_,i)=>{
+                    {Array.from({length:13},(_,i)=>{
                       const d=i+1,c=allCompleted[d]??[],da=getAmalForDay(d);
                       const done=da.length>0&&c.length===da.length;
                       return <button key={d} onClick={()=>setDay(d)} className={`h-1.5 rounded-full transition-all flex-1 ${d===day?"bg-white":done?"bg-[#A3E4D7]":c.length>0?"bg-[#A3E4D7]/50":"bg-white/20"}`}/>;
@@ -592,8 +610,9 @@ setGender(loadGender());
                 </div>
               </div>
 
-              {isArafahDay(day)&&<div className="mx-5 mb-4 bg-amber-500/20 border border-amber-400/30 rounded-xl px-3 py-2 text-xs text-amber-200 font-semibold">⭐ আরাফার দিন — আজকের রোজা দুই বছরের গুনাহ মাফ করে!</div>}
-              {isEidDay(day)&&<div className="mx-5 mb-4 bg-white/10 border border-white/20 rounded-xl px-3 py-2 text-xs text-white font-semibold">🎉 ঈদুল আজহা মুবারক! আজ রোজা রাখা নিষিদ্ধ।</div>}
+              {isFutureDay&&<div className="mx-5 mb-4 bg-white/10 border border-white/20 rounded-xl px-3 py-2 text-xs text-white/70 font-medium">🔒 ভবিষ্যতের দিন — দেখতে পাচ্ছেন, কিন্তু আমল আজকের দিন আসলেই সম্পন্ন করা যাবে।</div>}
+              {isArafahDay(day)&&!isFutureDay&&<div className="mx-5 mb-4 bg-amber-500/20 border border-amber-400/30 rounded-xl px-3 py-2 text-xs text-amber-200 font-semibold">⭐ আরাফার দিন — আজকের রোজা দুই বছরের গুনাহ মাফ করে!</div>}
+              {isEidDay(day)&&!isFutureDay&&<div className="mx-5 mb-4 bg-white/10 border border-white/20 rounded-xl px-3 py-2 text-xs text-white font-semibold">🎉 ঈদুল আজহা মুবারক! আজ রোজা রাখা নিষিদ্ধ।</div>}
             </div>
 
             {/* ── DAY 8 ARAFAH REMINDER ──────────────────────────────────── */}
@@ -731,12 +750,14 @@ setGender(loadGender());
                           checked={completed.includes(amal.id)}
                           onToggle={()=>toggle(amal.id)}
                           onDetail={()=>setSelectedAmal(amal)}
+                          disabled={isFutureDay}
                         />
                       :<AmalRow key={amal.id} amal={amal}
                           checked={completed.includes(amal.id)}
                           onToggle={()=>toggle(amal.id)}
                           onDetail={()=>setSelectedAmal(amal)}
                           gender={gender}
+                          disabled={isFutureDay}
                         />
                   ))}
                 </div>
@@ -779,7 +800,7 @@ setGender(loadGender());
                     <p className="text-emerald-600 text-xs mt-0.5">আগামীকাল · ১০ জিলহজ</p>
                   </div>
                 </div>
-                <a href="https://www.youtube.com/watch?v=QJoHl4RJADk  " target="_blank" rel="noopener noreferrer"
+                <a href="https://www.youtube.com/watch?v=QJoHl4RJADk" target="_blank" rel="noopener noreferrer"
                   className="block w-full py-2.5 bg-emerald-700 text-white text-xs font-bold rounded-xl text-center active:scale-95 transition-transform">
                   ঈদের আমল ভিডিও ↗
                 </a>

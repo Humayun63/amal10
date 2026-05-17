@@ -1,3 +1,5 @@
+import { getAmalForDay } from "./amal";
+
 export interface Badge {
   id: string;
   title: string;
@@ -88,7 +90,6 @@ export const BADGES: Badge[] = [
     icon: "🏆",
     condition: ({ daysCompleted }) => daysCompleted >= 1,
     getEarningDay: (completedAmalIds) => {
-      const { getAmalForDay } = require("./amal");
       const days = Object.keys(completedAmalIds).map(Number).sort((a, b) => a - b);
       return days.find(d => {
         const dayAmal = getAmalForDay(d);

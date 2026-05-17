@@ -12,7 +12,7 @@ export function getCurrentDhulHijjahDay(): number | null {
 
 export function isChallengeLive(): boolean {
   const now = new Date();
-  return now >= DHUL_HIJJAH_START && now <= CHALLENGE_END;
+  return now >= DHUL_HIJJAH_START && now <= TASHRIQ_END;
 }
 
 export function isTashriqDay(day: number): boolean {

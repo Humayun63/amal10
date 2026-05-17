@@ -148,7 +148,7 @@ export default function Sidebar() {
                   : "text-[#AEB6BF] hover:bg-[#FAFAF9] hover:text-[#1C2833]"
               }`}
             >
-              <span className="shrink-0">{item.icon(active && isDashboard)}</span>
+              <span className="shrink-0">{item.icon(active)}</span>
               <span className={`text-sm flex-1 ${active ? "font-semibold text-[#0B3C26]" : "font-medium"}`}>
                 {item.label}
               </span>
@@ -174,7 +174,7 @@ export default function Sidebar() {
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-[#1C2833] text-sm font-semibold truncate">{userName || "ব্যবহারকারী"}</p>
-            <p className="text-[#AEB6BF] text-[11px]">{toBn(totalPoints)} পয়েন্ট · #৫</p>
+            <p className="text-[#AEB6BF] text-[11px]">{toBn(totalPoints)} পয়েন্ট</p>
           </div>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-[#AEB6BF] shrink-0">
             <path d="M9 18l6-6-6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>

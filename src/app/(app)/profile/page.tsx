@@ -90,6 +90,11 @@ function SettingsSheet({ user, profile, onClose, onSave, onPhotoSave }: {
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      alert("ছবির সাইজ ২MB এর বেশি হওয়া যাবে না।");
+      e.target.value = "";
+      return;
+    }
     const reader = new FileReader();
     reader.onload = async () => {
       const b64 = reader.result as string;
@@ -317,37 +322,37 @@ function ShareCardModal({ displayName, streak, totalPoints, onClose }: {
     ctx.fillRect(80, 448, W - 160, 1);
 
     // Stat boxes — 3 equal columns
-    function drawStat(x: number, label: string, value: string, color: string) {
+    function drawStat(c: CanvasRenderingContext2D, x: number, label: string, value: string, color: string) {
       const bx = x, by = 468, bw = 196, bh = 150, br = 16;
-      ctx.fillStyle = "rgba(255,255,255,0.07)";
-      ctx.beginPath();
-      ctx.moveTo(bx + br, by);
-      ctx.lineTo(bx + bw - br, by);
-      ctx.quadraticCurveTo(bx + bw, by, bx + bw, by + br);
-      ctx.lineTo(bx + bw, by + bh - br);
-      ctx.quadraticCurveTo(bx + bw, by + bh, bx + bw - br, by + bh);
-      ctx.lineTo(bx + br, by + bh);
-      ctx.quadraticCurveTo(bx, by + bh, bx, by + bh - br);
-      ctx.lineTo(bx, by + br);
-      ctx.quadraticCurveTo(bx, by, bx + br, by);
-      ctx.closePath();
-      ctx.fill();
+      c.fillStyle = "rgba(255,255,255,0.07)";
+      c.beginPath();
+      c.moveTo(bx + br, by);
+      c.lineTo(bx + bw - br, by);
+      c.quadraticCurveTo(bx + bw, by, bx + bw, by + br);
+      c.lineTo(bx + bw, by + bh - br);
+      c.quadraticCurveTo(bx + bw, by + bh, bx + bw - br, by + bh);
+      c.lineTo(bx + br, by + bh);
+      c.quadraticCurveTo(bx, by + bh, bx, by + bh - br);
+      c.lineTo(bx, by + br);
+      c.quadraticCurveTo(bx, by, bx + br, by);
+      c.closePath();
+      c.fill();
 
-      ctx.fillStyle = color;
-      ctx.font = "bold 46px Arial, sans-serif";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "alphabetic";
-      ctx.fillText(value, bx + bw / 2, by + 92);
+      c.fillStyle = color;
+      c.font = "bold 46px Arial, sans-serif";
+      c.textAlign = "center";
+      c.textBaseline = "alphabetic";
+      c.fillText(value, bx + bw / 2, by + 92);
 
-      ctx.fillStyle = "rgba(255,255,255,0.5)";
-      ctx.font = "18px Arial, sans-serif";
-      ctx.fillText(label, bx + bw / 2, by + 128);
+      c.fillStyle = "rgba(255,255,255,0.5)";
+      c.font = "18px Arial, sans-serif";
+      c.fillText(label, bx + bw / 2, by + 128);
     }
 
     // 3 boxes, total width = 3×196 + 2×20 = 628, start at (800−628)/2 = 86
-    drawStat(86,  "স্ট্রেইক", `${streak} দিন`, "#F4A261");
-    drawStat(302, "পয়েন্ট",  `${totalPoints}`,  "#A3E4D7");
-    drawStat(518, "চ্যালেঞ্জ", "জিলহজ",         "#E9D8A6");
+    drawStat(ctx, 86,  "স্ট্রেইক", `${streak} দিন`, "#F4A261");
+    drawStat(ctx, 302, "পয়েন্ট",  `${totalPoints}`,  "#A3E4D7");
+    drawStat(ctx, 518, "চ্যালেঞ্জ", "জিলহজ",         "#E9D8A6");
 
     // Website URL section
     ctx.fillStyle = "rgba(255,255,255,0.10)";
@@ -457,7 +462,8 @@ export default function ProfilePage() {
   const streak = Object.keys(allCompleted).length;
   const daysCompleted = Object.entries(allCompleted).filter(([day, ids]) => {
     const da = getAmalForDay(Number(day));
-    return da.length > 0 && ids.length >= da.length;
+    const mandatory = da.filter(a => !a.optional);
+    return mandatory.length > 0 && mandatory.every(a => ids.includes(a.id));
   }).length;
 
   const conditionData: BadgeConditionData = { totalPoints, streak, completedAmalIds: allCompleted, daysCompleted };
@@ -535,7 +541,7 @@ export default function ProfilePage() {
               <p className="text-[#AEB6BF] text-[11px] mt-0.5">স্ট্রেইক</p>
             </div>
             <div className="flex-1 py-4 text-center">
-              <p className="text-purple-500 font-bold text-xl">{toBn(daysCompleted)}/১০</p>
+              <p className="text-purple-500 font-bold text-xl">{toBn(daysCompleted)}/১৩</p>
               <p className="text-[#AEB6BF] text-[11px] mt-0.5">সম্পর্ন দিন</p>
             </div>
           </div>
@@ -554,7 +560,7 @@ export default function ProfilePage() {
           </div>
           <div className="bg-white rounded-2xl border border-[#E6F4EA] p-4">
             <div className="flex gap-1.5 mb-3">
-              {Array.from({ length: 10 }, (_, i) => i + 1).map(d => {
+              {Array.from({ length: 13 }, (_, i) => i + 1).map(d => {
                 const comp = allCompleted[d] ?? [];
                 const da = getAmalForDay(d);
                 const done = da.length > 0 && comp.length >= da.length;
