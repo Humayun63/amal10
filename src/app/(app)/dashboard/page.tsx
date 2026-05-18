@@ -27,7 +27,7 @@ function toBn(n: number): string {
 function getDayOrdinal(day: number): string {
   const m: Record<number, string> = {
     1:"১ম",2:"২য়",3:"৩য়",4:"৪র্থ",5:"৫ম",6:"৬ষ্ঠ",
-    7:"৭ম",8:"৮ম",9:"৯ম",10:"১০ম",11:"১১তম",12:"১২তম",13:"১৩তম",
+    7:"৭ম",8:"৮ম",9:"৯ম",10:"১০ম",
   };
   return m[day] ?? `${toBn(day)}তম`;
 }
@@ -594,7 +594,7 @@ setGender(loadGender());
                   <RingProgress pct={pct} size={90}/>
                 </div>
                 <div className="flex gap-1 mt-4 mb-3">
-                  {Array.from({length:13},(_,i)=>{
+                  {Array.from({length:10},(_,i)=>{
                     const d=i+1,c=allCompleted[d]??[],da=getAmalForDay(d);
                     const done=da.length>0&&c.length===da.length;
                     return <button key={d} onClick={()=>setDay(d)} className={`h-1.5 rounded-full transition-all flex-1 ${d===day?"bg-white scale-y-125":done?"bg-[#A3E4D7]":c.length>0?"bg-[#A3E4D7]/50":"bg-white/20"}`}/>;
@@ -616,7 +616,7 @@ setGender(loadGender());
                     এই দশ দিনের প্রতি দিন মূল্যবান। {toBn(completed.length)}টি আমল সম্পন্ন · আর {toBn(dayAmal.length-completed.length)}টি বাকি — চলুন আজকের অবশিষ্ট আমল পূর্ণ করি।
                   </p>
                   <div className="flex gap-1.5 mb-4">
-                    {Array.from({length:13},(_,i)=>{
+                    {Array.from({length:10},(_,i)=>{
                       const d=i+1,c=allCompleted[d]??[],da=getAmalForDay(d);
                       const done=da.length>0&&c.length===da.length;
                       return <button key={d} onClick={()=>setDay(d)} className={`h-1.5 rounded-full transition-all flex-1 ${d===day?"bg-white":done?"bg-[#A3E4D7]":c.length>0?"bg-[#A3E4D7]/50":"bg-white/20"}`}/>;

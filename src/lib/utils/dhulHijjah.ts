@@ -1,22 +1,21 @@
 export const DHUL_HIJJAH_START = new Date("2026-05-19T00:00:00+06:00");
 export const CHALLENGE_END = new Date("2026-05-28T23:59:59+06:00");
-export const TASHRIQ_END = new Date("2026-05-31T15:30:00+06:00");
 
 export function getCurrentDhulHijjahDay(): number | null {
   const now = new Date();
   const diff = now.getTime() - DHUL_HIJJAH_START.getTime();
   const day = Math.floor(diff / (1000 * 60 * 60 * 24)) + 1;
-  if (day < 1 || day > 13) return null;
+  if (day < 1 || day > 10) return null;
   return day;
 }
 
 export function isChallengeLive(): boolean {
   const now = new Date();
-  return now >= DHUL_HIJJAH_START && now <= TASHRIQ_END;
+  return now >= DHUL_HIJJAH_START && now <= CHALLENGE_END;
 }
 
 export function isTashriqDay(day: number): boolean {
-  return day >= 9 && day <= 13;
+  return day === 9 || day === 10;
 }
 
 export function isArafahDay(day: number): boolean {
@@ -58,9 +57,6 @@ export function getDhulHijjahDateLabel(day: number): string {
     8: "৮ জিলহজ",
     9: "৯ জিলহজ — আরাফার দিন",
     10: "১০ জিলহজ — ঈদুল আজহা",
-    11: "১১ জিলহজ",
-    12: "১২ জিলহজ",
-    13: "১৩ জিলহজ",
   };
   return labels[day] ?? `${day} জিলহজ`;
 }

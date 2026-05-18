@@ -25,7 +25,6 @@ function toBn(n: number): string {
 const BN_DAY_LABELS: Record<number, string> = {
   1:"১ জিলহজ",2:"২ জিলহজ",3:"৩ জিলহজ",4:"৪ জিলহজ",5:"৫ জিলহজ",
   6:"৬ জিলহজ",7:"৭ জিলহজ",8:"৮ জিলহজ",9:"৯ জিলহজ",10:"১০ জিলহজ",
-  11:"১১ জিলহজ",12:"১২ জিলহজ",13:"১৩ জিলহজ",
 };
 
 async function uploadPhotoToSupabase(file: File, userId: string): Promise<string | null> {
@@ -633,7 +632,7 @@ export default function ProfilePage() {
           </div>
           <div className="bg-white rounded-2xl border border-[#E6F4EA] p-4">
             <div className="flex gap-1.5 mb-3">
-              {Array.from({ length: 13 }, (_, i) => i + 1).map(d => {
+              {Array.from({ length: 10 }, (_, i) => i + 1).map(d => {
                 const comp = allCompleted[d] ?? [];
                 const da = getAmalForDay(d);
                 const done = da.length > 0 && comp.length >= da.length;

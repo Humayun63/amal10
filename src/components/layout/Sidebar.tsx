@@ -15,7 +15,7 @@ function toBn(n: number): string {
 function getDayOrdinal(day: number): string {
   const map: Record<number, string> = {
     1: "১ম", 2: "২য়", 3: "৩য়", 4: "৪র্থ", 5: "৫ম", 6: "৬ষ্ঠ",
-    7: "৭ম", 8: "৮ম", 9: "৯ম", 10: "১০ম", 11: "১১তম", 12: "১২তম", 13: "১৩তম",
+    7: "৭ম", 8: "৮ম", 9: "৯ম", 10: "১০ম",
   };
   return map[day] ?? `${toBn(day)}তম`;
 }

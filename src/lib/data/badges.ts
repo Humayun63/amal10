@@ -77,11 +77,11 @@ export const BADGES: Badge[] = [
   {
     id: "takbir_squad",
     title: "তাকবীর স্কোয়াড",
-    description: "আইয়ামে তাশরীকের ৫ দিন তাকবীর আদায় করেছেন",
+    description: "আরাফা ও ঈদের দিন তাকবীর আদায় করেছেন",
     icon: "📣",
     condition: ({ completedAmalIds }) =>
-      [9, 10, 11, 12, 13].every(day => completedAmalIds[day]?.includes("takbir_tashriq") ?? false),
-    getEarningDay: () => 13,
+      [9, 10].every(day => completedAmalIds[day]?.includes("takbir_tashriq") ?? false),
+    getEarningDay: () => 10,
   },
   {
     id: "perfect_day",
