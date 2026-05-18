@@ -613,7 +613,7 @@ export default function ProfilePage() {
               <p className="text-[#AEB6BF] text-[11px] mt-0.5">স্ট্রেইক</p>
             </div>
             <div className="flex-1 py-4 text-center">
-              <p className="text-purple-500 font-bold text-xl">{toBn(daysCompleted)}/১৩</p>
+              <p className="text-purple-500 font-bold text-xl">{toBn(daysCompleted)}/১০</p>
               <p className="text-[#AEB6BF] text-[11px] mt-0.5">সম্পর্ন দিন</p>
             </div>
           </div>

@@ -3,17 +3,17 @@
 import { useEffect, useState } from "react";
 import { initNotifications } from "@/lib/notifications";
 
-function isFacebookBrowser(): boolean {
+function isInAppBrowser(): boolean {
   if (typeof navigator === "undefined") return false;
   const ua = navigator.userAgent || "";
-  return /FBAN|FBAV|FB_IAB|Instagram|Line\/|Twitter\/|Snapchat|TikTok|Pinterest/.test(ua);
+  return /FBAN|FBAV|FB_IAB|Instagram|Line\/|Twitter\/|Snapchat|TikTok|Pinterest|Lark\/|LarkLocale|BytedanceWebview|BytedanceMicroApp/.test(ua);
 }
 
 export default function AppInit() {
   const [showOpenBanner, setShowOpenBanner] = useState(false);
 
   useEffect(() => {
-    if (isFacebookBrowser()) {
+    if (isInAppBrowser()) {
       setShowOpenBanner(true);
       return;
     }
