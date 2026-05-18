@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
-  getAmalForDay, calculatePoints, type Amal,
+  getAmalForDay, calculatePoints, JAMAAT_PRAYER_IDS, type Amal,
 } from "@/lib/data/amal";
 import {
   getCurrentDhulHijjahDay, isTashriqDay,
@@ -311,7 +311,8 @@ function DhikrRow({amal, checked, onToggle, onDetail, disabled}: {
   );
 }
 
-function AmalDetail({amal,onClose}:{amal:Amal;onClose:()=>void}) {
+function AmalDetail({amal,onClose,gender}:{amal:Amal;onClose:()=>void;gender:"male"|"female"|null}) {
+  const title=gender==="female"&&amal.femaleTitle?amal.femaleTitle:amal.title;
   return (
     <BottomSheet isOpen onClose={onClose}>
       <div className="hidden md:flex justify-end mb-2">
@@ -322,7 +323,7 @@ function AmalDetail({amal,onClose}:{amal:Amal;onClose:()=>void}) {
       <div className="md:hidden flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <span className="text-2xl">{amal.icon}</span>
-          <h2 className="text-[#0B3C26] font-bold text-lg leading-tight">{amal.title}</h2>
+          <h2 className="text-[#0B3C26] font-bold text-lg leading-tight">{title}</h2>
         </div>
         <button onClick={onClose} className="w-9 h-9 rounded-full bg-[#F5F5F5] flex items-center justify-center shrink-0">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="#1C2833" strokeWidth="2" strokeLinecap="round"/></svg>
@@ -330,7 +331,7 @@ function AmalDetail({amal,onClose}:{amal:Amal;onClose:()=>void}) {
       </div>
       <div className="hidden md:flex items-center gap-2 mb-4">
         <span className="text-2xl">{amal.icon}</span>
-        <h2 className="text-[#0B3C26] font-bold text-xl">{amal.title}</h2>
+        <h2 className="text-[#0B3C26] font-bold text-xl">{title}</h2>
       </div>
       <div className="mb-4">
         <span className="bg-[#E6F4EA] text-[#0B3C26] text-sm font-bold px-3 py-1 rounded-full">+{toBn(amal.points)} পয়েন্ট</span>
@@ -374,6 +375,7 @@ export default function DashboardPage() {
   const [profileIncomplete,setProfileIncomplete]=useState(false);
   const [isBeforeChallenge,setIsBeforeChallenge]=useState(false);
   const [currentCalDay,setCurrentCalDay]=useState(1);
+  const [jamaatPromptId,setJamaatPromptId]=useState<string|null>(null);
 
   useEffect(()=>{
     const beforeStart = new Date() < DHUL_HIJJAH_START;
@@ -424,7 +426,8 @@ setGender(loadGender());
   const dayAmal=getAmalForDay(day);
   const mandatoryAmal=dayAmal.filter(a=>!a.optional);
   const points=calculatePoints(completed,day);
-  const mandatoryCompleted=completed.filter(id=>mandatoryAmal.some(a=>a.id===id));
+  const isPrayerDone=(id:string)=>completed.includes(id)||completed.includes(id+"_alone");
+  const mandatoryCompleted=mandatoryAmal.filter(a=>isPrayerDone(a.id));
   const pct=mandatoryAmal.length>0?Math.round(mandatoryCompleted.length/mandatoryAmal.length*100):0;
   const streak=Object.keys(allCompleted).length;
   const hadith=HADITHS[day%HADITHS.length];
@@ -432,25 +435,55 @@ setGender(loadGender());
   const dayOrdinal=getDayOrdinal(day);
   const nextSpecialDay=day===8?9:day===9?10:null;
 
-  const toggle=useCallback((id:string)=>{
+  const fireCompletion=useCallback((next:string[])=>{
+    setConfetti(true);
+    setTimeout(()=>setConfetti(false),100);
+    const mandatory=getAmalForDay(day).filter(a=>!a.optional);
+    if(mandatory.length>0&&mandatory.every(a=>next.includes(a.id)||next.includes(a.id+"_alone"))){
+      setCelebConfetti(true);
+      setTimeout(()=>setCelebConfetti(false),100);
+      if(day===10) setTimeout(()=>setShowDay10Celebration(true),800);
+    }
+  },[day]);
+
+  const commitToggle=useCallback((id:string)=>{
     setAllCompleted(prev=>{
       const cur=prev[day]??[];
-      const next=cur.includes(id)?cur.filter(x=>x!==id):[...cur,id];
+      const aloneId=id+"_alone";
+      const wasChecked=cur.includes(id)||cur.includes(aloneId);
+      const next=wasChecked
+        ?cur.filter(x=>x!==id&&x!==aloneId)
+        :[...cur.filter(x=>x!==id&&x!==aloneId),id];
       const updated={...prev,[day]:next};
       saveCompleted(updated);
-      if(!cur.includes(id)){
-        setConfetti(true);
-        setTimeout(()=>setConfetti(false),100);
-        const mandatory=getAmalForDay(day).filter(a=>!a.optional);
-        if(mandatory.length>0&&next.filter(i=>mandatory.some(a=>a.id===i)).length===mandatory.length){
-          setCelebConfetti(true);
-          setTimeout(()=>setCelebConfetti(false),100);
-          if(day===10) setTimeout(()=>setShowDay10Celebration(true),800);
-        }
-      }
+      if(!wasChecked) setTimeout(()=>fireCompletion(next),0);
       return updated;
     });
-  },[day]);
+  },[day,fireCompletion]);
+
+  const commitAlone=useCallback((id:string)=>{
+    setAllCompleted(prev=>{
+      const cur=prev[day]??[];
+      const aloneId=id+"_alone";
+      const next=[...cur.filter(x=>x!==id&&x!==aloneId),aloneId];
+      const updated={...prev,[day]:next};
+      saveCompleted(updated);
+      setTimeout(()=>fireCompletion(next),0);
+      return updated;
+    });
+  },[day,fireCompletion]);
+
+  const toggle=useCallback((id:string)=>{
+    // females toggle directly; males (and unknown) get the jamaat choice popup
+    if(JAMAAT_PRAYER_IDS.includes(id)&&gender!=="female"){
+      const cur=allCompleted[day]??[];
+      const already=cur.includes(id)||cur.includes(id+"_alone");
+      if(already){ commitToggle(id); return; }
+      setJamaatPromptId(id);
+    } else {
+      commitToggle(id);
+    }
+  },[day,gender,allCompleted,commitToggle]);
 
 
   const vcatInfo=VCAT.map(vc=>{
@@ -459,7 +492,7 @@ setGender(loadGender());
       :vc.key==="fard"
         ?dayAmal.filter(a=>a.category==="fard")
         :dayAmal.filter(a=>a.category==="social");
-    const done=items.filter(a=>completed.includes(a.id)).length;
+    const done=items.filter(a=>isPrayerDone(a.id)).length;
     const p=items.length>0?Math.round(done/items.length*100):0;
     return {...vc,items,done,p};
   }).filter(vc=>vc.items.length>0);
@@ -467,8 +500,8 @@ setGender(loadGender());
   const isDay10Complete=day===10&&mandatoryAmal.length>0&&mandatoryCompleted.length>=mandatoryAmal.length;
 
   const filteredAmal=dayAmal.filter(a=>{
-    if(filter==="remaining") return !completed.includes(a.id);
-    if(filter==="done") return completed.includes(a.id);
+    if(filter==="remaining") return !isPrayerDone(a.id);
+    if(filter==="done") return isPrayerDone(a.id);
     return true;
   });
 
@@ -788,7 +821,7 @@ setGender(loadGender());
                           disabled={isFutureDay||isBeforeChallenge}
                         />
                       :<AmalRow key={amal.id} amal={amal}
-                          checked={completed.includes(amal.id)}
+                          checked={isPrayerDone(amal.id)}
                           onToggle={()=>toggle(amal.id)}
                           onDetail={()=>setSelectedAmal(amal)}
                           gender={gender}
@@ -899,7 +932,46 @@ setGender(loadGender());
         </div>
       </div>
 
-      {selectedAmal&&<AmalDetail amal={selectedAmal} onClose={()=>setSelectedAmal(null)}/>}
+      {selectedAmal&&<AmalDetail amal={selectedAmal} onClose={()=>setSelectedAmal(null)} gender={gender}/>}
+
+      {jamaatPromptId&&(
+        <BottomSheet isOpen onClose={()=>setJamaatPromptId(null)}>
+          <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center gap-2">
+              <span className="text-2xl">{dayAmal.find(a=>a.id===jamaatPromptId)?.icon}</span>
+              <h2 className="text-[#0B3C26] font-bold text-lg leading-tight">
+                {dayAmal.find(a=>a.id===jamaatPromptId)?.title}
+              </h2>
+            </div>
+            <button onClick={()=>setJamaatPromptId(null)} className="w-9 h-9 rounded-full bg-[#F5F5F5] flex items-center justify-center shrink-0">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="#1C2833" strokeWidth="2" strokeLinecap="round"/></svg>
+            </button>
+          </div>
+          <p className="text-[#AEB6BF] text-sm mb-5">কীভাবে নামাজ আদায় করেছেন?</p>
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={()=>{commitToggle(jamaatPromptId);setJamaatPromptId(null);}}
+              className="w-full flex items-center justify-between bg-[#0B3C26] text-white rounded-2xl px-5 py-4"
+            >
+              <div className="text-left">
+                <p className="font-bold text-base">জামায়াতে পড়েছি</p>
+                <p className="text-[#A3E4D7] text-xs mt-0.5">মসজিদে বা জামায়াতে</p>
+              </div>
+              <span className="bg-white/20 text-white text-sm font-bold px-3 py-1 rounded-full">+{toBn(20)} pts</span>
+            </button>
+            <button
+              onClick={()=>{commitAlone(jamaatPromptId);setJamaatPromptId(null);}}
+              className="w-full flex items-center justify-between bg-[#E6F4EA] text-[#0B3C26] rounded-2xl px-5 py-4"
+            >
+              <div className="text-left">
+                <p className="font-bold text-base">একা পড়েছি</p>
+                <p className="text-[#0B3C26]/50 text-xs mt-0.5">একাকীভাবে আদায় করেছি</p>
+              </div>
+              <span className="bg-[#0B3C26]/10 text-[#0B3C26] text-sm font-bold px-3 py-1 rounded-full">+{toBn(10)} pts</span>
+            </button>
+          </div>
+        </BottomSheet>
+      )}
     </div>
   );
 }

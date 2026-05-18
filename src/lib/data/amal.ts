@@ -23,7 +23,7 @@ export const ALL_AMAL: Amal[] = [
   // ── ফরজ ও ওয়াজিব ────────────────────────────────────────────────────────
   {
     id: "fajr",
-    title: "ফজর নামাজ জামায়াতে",
+    title: "ফজর নামাজ",
     femaleTitle: "ফজর নামাজ",
     category: "fard",
     points: 20,
@@ -34,7 +34,7 @@ export const ALL_AMAL: Amal[] = [
   },
   {
     id: "zuhr",
-    title: "যোহর নামাজ জামায়াতে",
+    title: "যোহর নামাজ",
     femaleTitle: "যোহর নামাজ",
     category: "fard",
     points: 20,
@@ -44,7 +44,7 @@ export const ALL_AMAL: Amal[] = [
   },
   {
     id: "asr",
-    title: "আসর নামাজ জামায়াতে",
+    title: "আসর নামাজ ",
     femaleTitle: "আসর নামাজ",
     category: "fard",
     points: 20,
@@ -55,7 +55,7 @@ export const ALL_AMAL: Amal[] = [
   },
   {
     id: "maghrib",
-    title: "মাগরিব নামাজ জামায়াতে",
+    title: "মাগরিব নামাজ ",
     femaleTitle: "মাগরিব নামাজ",
     category: "fard",
     points: 20,
@@ -65,7 +65,7 @@ export const ALL_AMAL: Amal[] = [
   },
   {
     id: "isha",
-    title: "এশা নামাজ জামায়াতে",
+    title: "এশা নামাজ ",
     femaleTitle: "এশা নামাজ",
     category: "fard",
     points: 20,
@@ -313,11 +313,17 @@ export function getAmalForDay(day: number): Amal[] {
   return ALL_AMAL.filter((a) => a.days.includes(day));
 }
 
+export const JAMAAT_PRAYER_IDS = ["fajr", "zuhr", "asr", "maghrib", "isha"];
+
 export function calculatePoints(completedIds: string[], day: number): number {
   const dayAmal = getAmalForDay(day);
-  return dayAmal
+  const base = dayAmal
     .filter((a) => completedIds.includes(a.id))
     .reduce((sum, a) => sum + a.points, 0);
+  const alonePoints = completedIds.filter(
+    (id) => id.endsWith("_alone") && JAMAAT_PRAYER_IDS.includes(id.replace("_alone", ""))
+  ).length * 10;
+  return base + alonePoints;
 }
 
 export function getMaxPoints(day: number): number {
